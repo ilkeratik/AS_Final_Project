@@ -1,24 +1,20 @@
-# ADR-001: Single-Store Deployment Configuration over Native Multi-Store Routing
+# ADR-001: Single-Store Deployment Configuration
 
-## Status
-Proposed
+Status: Proposed
 
-## Context
-nopCommerce includes a native multi-store capability that routes multiple storefronts from a single application and shared database. The federated scenario requires strict fault boundaries between business units (BUs) to avoid a single shared-database shortcut across extracted service boundaries.
+Context
+The nopCommerce platform includes a native multi-store capability that can host multiple storefronts from a single application and shared database. The federated acquisition scenario requires strict fault isolation between business units (BUs) and forbids shared-database shortcuts across BU boundaries.
 
-## Decision
-Deploy each business unit as an independent nopCommerce runtime with a dedicated PostgreSQL database. Do not operationally use the native multi-store shared-database feature for cross-brand integration. The native multi-store code remains in the codebase (not removed).
+Decision
+Deploy each BU as an independent nopCommerce runtime with its own dedicated PostgreSQL database. Do not use the shared multi-store database for cross-BU operation; keep the multi-store code but disable/use single-store configuration per deployment.
 
-## Consequences
-- Pros:
-  - Strong fault isolation and local autonomy.
-  - Independent scaling, maintenance, and upgrades per BU.
-- Cons:
-  - More infrastructure to operate (multiple app instances and DBs).
-  - Cross-brand queries require asynchronous aggregation (e.g., search index).
+Consequences
+- Positive: strong fault isolation, independent scaling and upgrades, clearer operational ownership.
+- Negative: higher operational overhead (multiple DBs and runtimes); cross-BU aggregation requires asynchronous approaches (search index, event streams).
 
-## Rationale
-The federated scenario explicitly forbids shared DB shortcuts. Operational isolation prevents a localized failure from cascading across brands, meeting the "local degradation without group collapse" quality attribute.
+Alternatives Considered
+- Use shared multi-store with strict tenant isolation (rejected: shared DB remains single point of failure).
+- Use logical tenancy (tenant_id) in one DB (rejected for compliance and risk reasons).
 
-## References
-See main document: `AS Final Assignment.md` (Section 7.1)
+Date: 2026-05-14
+Owners: Platform Architecture Team / DevOps
