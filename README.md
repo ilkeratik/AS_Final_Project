@@ -2,7 +2,9 @@
 
 A **two-BU federated commerce system** built on nopCommerce — two fully isolated stores sharing a common event backbone, unified search index, and SSO identity provider.
 
----
+## Repository summary
+- **/docs:** Design and implementation documents, slides and diagrams
+- **/source_code:** Nopcommerce and developed features including containers and scripts
 
 ## Table of Contents
 
@@ -770,10 +772,6 @@ src/
 │   ├── demo_playbook.md                         # Step-by-step demo runbook
 │   └── diagrams.md                              # 9 Mermaid diagrams (C4, sequences, state, …)
 │
-├── README.md              ← this file
-├── DEVELOPMENT_STATUS.md  ← change log
-├── RULES.md               ← coding standards
-├── CONTRIBUTING.md        ← PR workflow
 └── LICENSE.md
 ```
 
