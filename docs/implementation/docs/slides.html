@@ -1,0 +1,501 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8"/>
+<meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+<title>nopCommerce Federated Commerce</title>
+<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/reveal.js@5.1.0/dist/reveal.css"/>
+<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/reveal.js@5.1.0/dist/theme/night.css"/>
+<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/reveal.js@5.1.0/plugin/highlight/monokai.css"/>
+<style>
+  /* ALL font sizes in px — independent of Reveal.js dynamic base font */
+  :root { --a:#7ecfff; --g:#6ee7b7; --o:#fbbf24; --m:#94a3b8; }
+
+  .reveal { font-family:'Segoe UI',system-ui,sans-serif; }
+
+  .reveal h1 { color:var(--a); font-size:26px !important; margin:0 0 10px; line-height:1.2; }
+  .reveal h2 { color:var(--a); font-size:18px !important; border-bottom:2px solid #1e3a5f;
+               padding-bottom:4px; margin:0 0 10px; }
+  .reveal h3 { color:var(--g); font-size:13px !important; margin:0 0 4px; }
+  .reveal p  { font-size:12px !important; line-height:1.45; margin:3px 0; }
+  .reveal li { font-size:11px !important; line-height:1.5; }
+  .reveal pre { font-size:10px !important; margin:4px 0; line-height:1.35; }
+  .reveal table { font-size:11px !important; width:100%; }
+  .reveal table th { background:#1e3a5f; color:var(--a); padding:3px 6px; }
+  .reveal table td { padding:2px 6px; border-color:#2d3f55; }
+  .reveal code { color:var(--o); font-size:inherit !important; }
+  .reveal section { padding:0 !important; }
+  .reveal .slides section { overflow:hidden !important; }
+
+  /* slide wrapper */
+  .wrap {
+    padding:10px 22px;
+    height:700px;
+    box-sizing:border-box;
+    display:flex;
+    flex-direction:column;
+    justify-content:center;
+    overflow:hidden;
+  }
+
+  .c2  { display:grid; grid-template-columns:1fr 1fr; gap:8px; }
+  .c3  { display:grid; grid-template-columns:1fr 1fr 1fr; gap:7px; }
+  .c4  { display:grid; grid-template-columns:repeat(4,1fr); gap:7px; }
+
+  .b   { border:1px solid #1e3a5f; border-radius:5px; padding:7px 10px; background:#0d1b2e; }
+  .bg  { border-color:#065f46; background:#021a12; }
+
+  .pill { display:inline-block; border-radius:3px; padding:0 6px;
+          font-size:10px !important; font-weight:700; vertical-align:middle; margin-right:3px; }
+  .pb { background:#1e3a5f; color:var(--a); }
+  .pg { background:#064e3b; color:var(--g); }
+  .po { background:#451a03; color:var(--o); }
+
+  .kpi     { text-align:center; padding:8px 4px; }
+  .kpi .n  { font-size:30px !important; font-weight:700; color:var(--g); line-height:1.1; }
+  .kpi .l  { color:var(--m); font-size:10px !important; margin-top:2px; }
+
+  .fl  { display:flex; flex-direction:column; gap:5px; }
+  .st  { display:flex; align-items:flex-start; gap:8px;
+         border:1px solid #1e3a5f; border-radius:4px;
+         padding:5px 10px; background:#0d1b2e; }
+  .sn  { flex-shrink:0; width:18px; height:18px; line-height:18px; border-radius:50%;
+         background:var(--a); color:#0f172a; font-weight:700; font-size:10px !important;
+         text-align:center; }
+  .sb  { font-size:12px !important; line-height:1.4; }
+  .sb strong { color:#e2e8f0; }
+  .dim { color:var(--m); font-size:10px !important; }
+  .mu  { color:var(--m); font-size:10px !important; }
+</style>
+</head>
+<body>
+<div class="reveal"><div class="slides">
+
+<!-- 1 · TITLE -->
+<section><div class="wrap">
+  <h1>nopCommerce Federated Commerce</h1>
+  <p class="mu" style="margin-bottom:8px">Two independent online stores — shared event backbone, unified product search, and single sign-on</p>
+  <div class="c4" style="margin-bottom:10px">
+    <div class="b kpi"><div class="n">2</div><div class="l">Independent Stores</div></div>
+    <div class="b kpi"><div class="n">~5 s</div><div class="l">Save → Searchable</div></div>
+    <div class="b kpi"><div class="n">6</div><div class="l">Custom Features</div></div>
+    <div class="b kpi"><div class="n">14</div><div class="l">Dashboards</div></div>
+  </div>
+  <div class="c3">
+    <div class="b"><span class="pill pb">Event</span> <strong style="font-size:12px">Outbox Plugin</strong><br/><span class="mu">Product changes are captured in the database as events — guaranteed, no data loss.</span></div>
+    <div class="b"><span class="pill pb">Relay</span> <strong style="font-size:12px">Kafka Relay</strong><br/><span class="mu">Events are forwarded to the shared Kafka message bus automatically every 5 s.</span></div>
+    <div class="b"><span class="pill pb">Index</span> <strong style="font-size:12px">Meilisearch Indexer</strong><br/><span class="mu">Products from both stores land in one searchable index in real time.</span></div>
+    <div class="b"><span class="pill pg">Search</span> <strong style="font-size:12px">Discovery API + Widget</strong><br/><span class="mu">Shoppers search both stores from a single search bar.</span></div>
+    <div class="b"><span class="pill pg">Identity</span> <strong style="font-size:12px">Keycloak SSO</strong><br/><span class="mu">One account works on both stores — no second registration.</span></div>
+    <div class="b"><span class="pill po">Ops</span> <strong style="font-size:12px">Prometheus + Grafana</strong><br/><span class="mu">14 dashboards track the full pipeline end-to-end.</span></div>
+  </div>
+</div></section>
+
+<!-- 2 · MODULES OVERVIEW -->
+<section><div class="wrap">
+  <h2>Features Built on Top of nopCommerce</h2>
+  <div style="display:flex;flex-direction:column;gap:9px;margin-top:6px">
+    <div class="b" style="display:grid;grid-template-columns:140px 1fr;align-items:center;gap:12px">
+      <div><span class="pill pb" style="font-size:11px!important">Outbox Plugin</span></div>
+      <p style="margin:0">Every product change is written to the database as an event in the same transaction — guaranteeing it is never lost even if downstream services are down.</p>
+    </div>
+    <div class="b" style="display:grid;grid-template-columns:140px 1fr;align-items:center;gap:12px">
+      <div><span class="pill pb" style="font-size:11px!important">Kafka Relay</span></div>
+      <p style="margin:0">A background worker polls the outbox every 5 seconds and forwards events to Kafka, with automatic retry, dead-message handling, and a self-healing watchdog.</p>
+    </div>
+    <div class="b" style="display:grid;grid-template-columns:140px 1fr;align-items:center;gap:12px">
+      <div><span class="pill pb" style="font-size:11px!important">Meilisearch Indexer</span></div>
+      <p style="margin:0">Consumes Kafka events in batches and upserts or removes products from the shared search index, keeping both stores searchable in near real-time.</p>
+    </div>
+    <div class="b" style="display:grid;grid-template-columns:140px 1fr;align-items:center;gap:12px">
+      <div><span class="pill pg" style="font-size:11px!important">Discovery API + Widget</span></div>
+      <p style="margin:0">A lightweight API exposes unified cross-BU search and facets; an embedded JS widget lets shoppers search both stores from any page without leaving their current store.</p>
+    </div>
+    <div class="b" style="display:grid;grid-template-columns:140px 1fr;align-items:center;gap:12px">
+      <div><span class="pill pg" style="font-size:11px!important">Keycloak SSO</span></div>
+      <p style="margin:0">A custom nopCommerce external-auth plugin integrates Keycloak OIDC so one account grants access to both stores with no extra registration.</p>
+    </div>
+    <div class="b" style="display:grid;grid-template-columns:140px 1fr;align-items:center;gap:12px">
+      <div><span class="pill po" style="font-size:11px!important">Prometheus + Grafana</span></div>
+      <p style="margin:0">14 dashboards cover every pipeline stage — from outbox pending counts and dead messages to cross-BU search latency, SSO health, and side-by-side BU comparison.</p>
+    </div>
+  </div>
+</div></section>
+
+<!-- 3 · PIPELINE DIAGRAM -->
+<section>
+<div style="padding:12px 22px;height:700px;box-sizing:border-box;display:flex;flex-direction:column;">
+  <h2 style="color:#7ecfff;font-size:18px!important;border-bottom:2px solid #1e3a5f;padding-bottom:4px;margin:0 0 8px">Pipeline Architecture</h2>
+  <svg viewBox="0 0 1180 590" style="flex:1;width:100%" xmlns="http://www.w3.org/2000/svg">
+    <defs>
+      <marker id="ah" markerWidth="9" markerHeight="7" refX="9" refY="3.5" orient="auto">
+        <polygon points="0 0,9 3.5,0 7" fill="#94a3b8"/>
+      </marker>
+      <marker id="ah-b" markerWidth="9" markerHeight="7" refX="9" refY="3.5" orient="auto">
+        <polygon points="0 0,9 3.5,0 7" fill="#7ecfff"/>
+      </marker>
+      <marker id="ah-g" markerWidth="9" markerHeight="7" refX="9" refY="3.5" orient="auto">
+        <polygon points="0 0,9 3.5,0 7" fill="#6ee7b7"/>
+      </marker>
+      <marker id="ah-o" markerWidth="9" markerHeight="7" refX="9" refY="3.5" orient="auto">
+        <polygon points="0 0,9 3.5,0 7" fill="#fbbf24"/>
+      </marker>
+    </defs>
+
+    <!-- ── BU-A outer container ── -->
+    <rect x="18" y="10" width="290" height="185" rx="10" fill="#0a1525" stroke="#3a5a8f" stroke-width="2"/>
+    <text x="163" y="31" text-anchor="middle" font-size="11" fill="#94a3b8" font-family="Segoe UI,sans-serif">nopCommerce · Outbox Plugin</text>
+    <text x="163" y="48" text-anchor="middle" font-size="15" font-weight="bold" fill="#7ecfff" font-family="Segoe UI,sans-serif">BU-A</text>
+    <!-- PostgreSQL -->
+    <rect x="33" y="60" width="260" height="120" rx="6" fill="#060f1c" stroke="#1e3a5f" stroke-width="1.5"/>
+    <text x="163" y="78" text-anchor="middle" font-size="10" fill="#64748b" font-family="Segoe UI,sans-serif">PostgreSQL :5433</text>
+    <!-- OutboxMessage table -->
+    <rect x="48" y="86" width="230" height="80" rx="5" fill="#0d1b35" stroke="#3a5a8f" stroke-width="1.5" stroke-dasharray="5,3"/>
+    <text x="163" y="106" text-anchor="middle" font-size="12" font-weight="bold" fill="#7ecfff" font-family="Segoe UI,sans-serif">OutboxMessage</text>
+    <text x="163" y="123" text-anchor="middle" font-size="9" fill="#475569" font-family="Segoe UI,sans-serif">EventType · Payload · Topic</text>
+    <text x="163" y="138" text-anchor="middle" font-size="9" fill="#475569" font-family="Segoe UI,sans-serif">Attempts · ProcessedOnUtc</text>
+    <text x="163" y="153" text-anchor="middle" font-size="9" fill="#475569" font-family="Segoe UI,sans-serif">CorrelationId</text>
+
+    <!-- ── BU-B outer container ── -->
+    <rect x="872" y="10" width="290" height="185" rx="10" fill="#0a1525" stroke="#3a5a8f" stroke-width="2"/>
+    <text x="1017" y="31" text-anchor="middle" font-size="11" fill="#94a3b8" font-family="Segoe UI,sans-serif">nopCommerce · Outbox Plugin</text>
+    <text x="1017" y="48" text-anchor="middle" font-size="15" font-weight="bold" fill="#7ecfff" font-family="Segoe UI,sans-serif">BU-B</text>
+    <!-- PostgreSQL -->
+    <rect x="887" y="60" width="260" height="120" rx="6" fill="#060f1c" stroke="#1e3a5f" stroke-width="1.5"/>
+    <text x="1017" y="78" text-anchor="middle" font-size="10" fill="#64748b" font-family="Segoe UI,sans-serif">PostgreSQL :5434</text>
+    <!-- OutboxMessage table -->
+    <rect x="902" y="86" width="230" height="80" rx="5" fill="#0d1b35" stroke="#3a5a8f" stroke-width="1.5" stroke-dasharray="5,3"/>
+    <text x="1017" y="106" text-anchor="middle" font-size="12" font-weight="bold" fill="#7ecfff" font-family="Segoe UI,sans-serif">OutboxMessage</text>
+    <text x="1017" y="123" text-anchor="middle" font-size="9" fill="#475569" font-family="Segoe UI,sans-serif">EventType · Payload · Topic</text>
+    <text x="1017" y="138" text-anchor="middle" font-size="9" fill="#475569" font-family="Segoe UI,sans-serif">Attempts · ProcessedOnUtc</text>
+    <text x="1017" y="153" text-anchor="middle" font-size="9" fill="#475569" font-family="Segoe UI,sans-serif">CorrelationId</text>
+
+    <!-- ── Kafka Relay ── -->
+    <rect x="480" y="253" width="220" height="52" rx="8" fill="#0d1b2e" stroke="#7ecfff" stroke-width="2"/>
+    <text x="590" y="276" text-anchor="middle" font-size="14" font-weight="bold" fill="#7ecfff" font-family="Segoe UI,sans-serif">Kafka Relay</text>
+    <text x="590" y="293" text-anchor="middle" font-size="9" fill="#94a3b8" font-family="Segoe UI,sans-serif">poll 5 s · SKIP LOCKED · batch ≤50</text>
+
+    <!-- ── Kafka ── -->
+    <rect x="480" y="355" width="220" height="52" rx="8" fill="#0d1b2e" stroke="#fbbf24" stroke-width="2"/>
+    <text x="590" y="378" text-anchor="middle" font-size="14" font-weight="bold" fill="#fbbf24" font-family="Segoe UI,sans-serif">Kafka</text>
+    <text x="590" y="395" text-anchor="middle" font-size="9" fill="#94a3b8" font-family="Segoe UI,sans-serif">federation.products · KRaft · :9092</text>
+
+    <!-- ── Meilisearch Indexer ── -->
+    <rect x="480" y="457" width="220" height="52" rx="8" fill="#0d1b2e" stroke="#6ee7b7" stroke-width="2"/>
+    <text x="590" y="480" text-anchor="middle" font-size="14" font-weight="bold" fill="#6ee7b7" font-family="Segoe UI,sans-serif">Meilisearch Indexer</text>
+    <text x="590" y="497" text-anchor="middle" font-size="9" fill="#94a3b8" font-family="Segoe UI,sans-serif">batch ≤50 / 500 ms · upsert + delete</text>
+
+    <!-- ── Meilisearch ── -->
+    <rect x="265" y="548" width="220" height="52" rx="8" fill="#021a12" stroke="#6ee7b7" stroke-width="2"/>
+    <text x="375" y="572" text-anchor="middle" font-size="14" font-weight="bold" fill="#6ee7b7" font-family="Segoe UI,sans-serif">Meilisearch</text>
+    <text x="375" y="589" text-anchor="middle" font-size="9" fill="#94a3b8" font-family="Segoe UI,sans-serif">unified products index · :7700</text>
+
+    <!-- ── Discovery API ── -->
+    <rect x="695" y="548" width="220" height="52" rx="8" fill="#0d1b2e" stroke="#7ecfff" stroke-width="2"/>
+    <text x="805" y="572" text-anchor="middle" font-size="14" font-weight="bold" fill="#7ecfff" font-family="Segoe UI,sans-serif">Discovery API</text>
+    <text x="805" y="589" text-anchor="middle" font-size="9" fill="#94a3b8" font-family="Segoe UI,sans-serif">/api/search · /api/facets · :5010</text>
+
+    <!-- ══ ARROWS ══ -->
+
+    <!-- BU-A bottom → merge line -->
+    <line x1="163" y1="195" x2="163" y2="236" stroke="#7ecfff" stroke-width="1.5"/>
+    <!-- BU-B bottom → merge line -->
+    <line x1="1017" y1="195" x2="1017" y2="236" stroke="#7ecfff" stroke-width="1.5"/>
+    <!-- Horizontal merge line -->
+    <line x1="163" y1="236" x2="1017" y2="236" stroke="#7ecfff" stroke-width="1.5"/>
+    <!-- Down to Kafka Relay -->
+    <line x1="590" y1="236" x2="590" y2="253" stroke="#7ecfff" stroke-width="2" marker-end="url(#ah-b)"/>
+    <!-- Label: poll -->
+    <text x="620" y="247" font-size="9" fill="#7ecfff" font-family="Segoe UI,sans-serif">poll 5 s</text>
+
+    <!-- Kafka Relay → Kafka -->
+    <line x1="590" y1="305" x2="590" y2="355" stroke="#fbbf24" stroke-width="2" marker-end="url(#ah-o)"/>
+    <text x="597" y="334" font-size="9" fill="#fbbf24" font-family="Segoe UI,sans-serif">publish</text>
+
+    <!-- Kafka → Meilisearch Indexer -->
+    <line x1="590" y1="407" x2="590" y2="457" stroke="#6ee7b7" stroke-width="2" marker-end="url(#ah-g)"/>
+    <text x="597" y="436" font-size="9" fill="#6ee7b7" font-family="Segoe UI,sans-serif">consume</text>
+
+    <!-- Meilisearch Indexer → Meilisearch (L-path) -->
+    <line x1="590" y1="509" x2="590" y2="530" stroke="#6ee7b7" stroke-width="1.5"/>
+    <line x1="590" y1="530" x2="375" y2="530" stroke="#6ee7b7" stroke-width="1.5"/>
+    <line x1="375" y1="530" x2="375" y2="548" stroke="#6ee7b7" stroke-width="2" marker-end="url(#ah-g)"/>
+    <text x="456" y="526" font-size="9" fill="#6ee7b7" text-anchor="middle" font-family="Segoe UI,sans-serif">upsert / delete</text>
+
+    <!-- Discovery API → Meilisearch (query) -->
+    <line x1="695" y1="574" x2="485" y2="574" stroke="#7ecfff" stroke-width="2" marker-end="url(#ah-b)"/>
+    <text x="590" y="568" font-size="9" fill="#7ecfff" text-anchor="middle" font-family="Segoe UI,sans-serif">GET /api/search</text>
+  </svg>
+</div>
+</section>
+
+<!-- 3 · STEP-BY-STEP FLOW -->
+<section><div class="wrap">
+  <h2>Step by Step — Admin Publishes a Product</h2>
+  <div class="fl">
+    <div class="st"><div class="sn">1</div>
+      <div class="sb"><strong>Admin saves a product</strong> in the nopCommerce admin panel<br/>
+      <span class="dim">nopCommerce fires an internal event: <code>EntityInsertedEvent&lt;Product&gt;</code></span></div>
+    </div>
+    <div class="st"><div class="sn">2</div>
+      <div class="sb"><strong>The Outbox Plugin writes a row</strong> to the <code>OutboxMessage</code> database table — in the <em>same transaction</em> as the product save<br/>
+      <span class="dim">Row contains: store, product id, name, URL, categories, price, event type</span></div>
+    </div>
+    <div class="st"><div class="sn">3</div>
+      <div class="sb"><strong>The Kafka Relay polls every 5 seconds</strong>, picks up the row, and sends it to the <code>federation.products</code> Kafka topic<br/>
+      <span class="dim">Once Kafka confirms delivery, the row is marked as processed</span></div>
+    </div>
+    <div class="st"><div class="sn">4</div>
+      <div class="sb"><strong>The Meilisearch Indexer reads from Kafka</strong> and upserts the product into the shared search index<br/>
+      <span class="dim">Document id = <code>bu-a-42</code> (store + product id) — unique across both stores</span></div>
+    </div>
+    <div class="st"><div class="sn">5</div>
+      <div class="sb"><strong>The product is now searchable</strong> — Discovery API returns it for both stores · <strong>Total time: ~5–6 s</strong><br/>
+      <span class="dim"><code>GET /api/search?q=armchair</code> → hits from BU-A and BU-B in one response</span></div>
+    </div>
+  </div>
+</div></section>
+
+<!-- 4 · OUTBOX PATTERN -->
+<section><div class="wrap">
+  <h2>The Outbox Pattern — Events That Are Never Lost</h2>
+  <div class="c2" style="align-items:start">
+    <div style="display:flex;flex-direction:column;gap:.42em">
+      <div class="b"><h3>Why not write directly to Kafka?</h3>
+        <p>If Kafka was temporarily down when a product was saved, the product would be saved but the event would be lost — search would never know. The outbox writes the event to the <strong>database in the same transaction</strong>, so both are saved or neither is.</p></div>
+      <div class="b"><h3>What is stored</h3>
+        <table>
+          <tr><th>Field</th><th>Example</th></tr>
+          <tr><td>Event type</td><td><code>product.published</code></td></tr>
+          <tr><td>Store</td><td><code>bu-a</code></td></tr>
+          <tr><td>Payload</td><td>name, URL, price, categories…</td></tr>
+          <tr><td>Status</td><td>Pending → Processed</td></tr>
+          <tr><td>Attempts</td><td>0 (increments on failure)</td></tr>
+        </table></div>
+    </div>
+    <div style="display:flex;flex-direction:column;gap:.42em">
+      <div class="b"><h3>What if delivery fails?</h3>
+        <p>If the relay cannot reach Kafka, the attempt counter increases. The row is retried on the next cycle. After <strong>5 failures</strong> it becomes a <em>Dead Message</em> — skipped so other events are not blocked. It can be re-queued manually at any time.</p></div>
+      <div class="b"><h3>Delete events</h3>
+        <p>When a product is deleted, only the <strong>store code and product ID</strong> are stored — that is all the indexer needs to remove it from search. A second listener on the admin activity log acts as a fallback to catch any missed deletes.</p></div>
+      <div class="b"><h3>Idempotency</h3>
+        <p>Each row has a deterministic ID based on store + event type + product id. The same event can be safely re-delivered without creating duplicates in the search index.</p></div>
+    </div>
+  </div>
+</div></section>
+
+<!-- 5 · RELAY → KAFKA → INDEXER -->
+<section><div class="wrap">
+  <h2>Relay → Kafka → Meilisearch — How Events Travel</h2>
+  <div class="c2" style="align-items:start">
+    <div style="display:flex;flex-direction:column;gap:.42em">
+      <div class="b"><h3>The Relay Worker (every 5 s)</h3>
+        <pre><code class="language-sql">SELECT * FROM "OutboxMessage"
+WHERE  ProcessedOnUtc IS NULL
+  AND  Attempts &lt; 5
+ORDER  BY CreatedOnUtc
+LIMIT  50
+FOR UPDATE SKIP LOCKED</code></pre>
+        <p><code>SKIP LOCKED</code> — two relay workers can run at once without processing the same row twice. <code>Acks=All</code> — no silent Kafka data loss.</p></div>
+      <div class="b"><h3>Self-Healing Watchdog (every 5 min)</h3>
+        <p>If the Meilisearch index is ever empty — e.g. after a server restart wipes the volume — the watchdog detects it and re-queues all processed product events. The index rebuilds itself in <strong>~30 seconds with no manual action</strong>.</p></div>
+    </div>
+    <div style="display:flex;flex-direction:column;gap:.42em">
+      <div class="b"><h3>The Indexer — Batch Processing</h3>
+        <p>Rather than updating Meilisearch once per product, the indexer waits up to <strong>500 ms</strong> and collects up to <strong>50 messages</strong>, then sends one bulk request. This reduces 50 HTTP calls to just 2.</p></div>
+      <div class="b"><h3>Event → Index action</h3>
+        <table>
+          <tr><th>Event</th><th>Action</th></tr>
+          <tr><td><code>product.published</code></td><td>Add / update in index</td></tr>
+          <tr><td><code>product.updated</code></td><td>Add / update in index</td></tr>
+          <tr><td><code>product.unpublished</code></td><td>Remove from index</td></tr>
+          <tr><td><code>product.deleted</code></td><td>Remove from index</td></tr>
+        </table>
+        <p style="margin-top:.3em">Deletes wait for Meilisearch to confirm the task completed before moving on.</p></div>
+    </div>
+  </div>
+</div></section>
+
+<!-- 6 · DISCOVERY SEARCH -->
+<section><div class="wrap">
+  <h2>Discovery — How Shoppers Search Both Stores</h2>
+  <div class="c2" style="align-items:start">
+    <div style="display:flex;flex-direction:column;gap:.42em">
+      <div class="b"><h3>The Unified Index</h3>
+        <p>Products from both stores live in one Meilisearch index. Each document carries the store it came from.</p>
+        <pre><code class="language-json">{
+  "id":        "bu-a-42",
+  "storeName": "HomeStyle Living",
+  "productName":"Armchair Velvet",
+  "productUrl":"http://localhost:5001/armchair-velvet",
+  "categories":["Furniture","Living Room"],
+  "price":     349.00
+}</code></pre></div>
+      <div class="b"><h3>Discovery API (:5010)</h3>
+        <pre><code class="language-bash">GET /api/search?q=armchair
+GET /api/facets</code></pre>
+        <p>Results cached for <strong>1 second</strong>. A deleted product disappears within 1 s of the indexer confirming removal.</p></div>
+    </div>
+    <div style="display:flex;flex-direction:column;gap:.42em">
+      <div class="b"><h3>Embedded Search Widget</h3>
+        <p>A JavaScript widget is included on each store's homepage. Shoppers search both stores without leaving the page. Results include a direct "View on store" link.</p></div>
+      <div class="b"><h3>Discovery Web Portal (:5011)</h3>
+        <p>A standalone cross-BU search portal with store filter chips — narrow results to BU-A, BU-B, or both.</p></div>
+      <div class="b"><h3>End-to-end timing</h3>
+        <table>
+          <tr><td>Plugin writes row</td><td>&lt;10 ms</td></tr>
+          <tr><td>Relay → Kafka</td><td>≤5 s</td></tr>
+          <tr><td>Indexer → Meilisearch</td><td>≤500 ms</td></tr>
+          <tr><td>Cache expires</td><td>1 s</td></tr>
+          <tr><td><strong>Total</strong></td><td><strong>~5–6 s</strong></td></tr>
+        </table></div>
+    </div>
+  </div>
+</div></section>
+
+<!-- 7 · SSO -->
+<section><div class="wrap">
+  <h2>Single Sign-On — One Account for Both Stores</h2>
+  <div class="c2" style="align-items:start">
+    <div>
+  <p style="margin-bottom:8px">Keycloak is the central identity provider. A shopper creates one account and can log in to both stores — no second registration, no second password.</p>
+      <div class="fl">
+        <div class="st"><div class="sn">1</div>
+          <div class="sb"><strong>Shopper clicks "Login"</strong> on BU-A or BU-B</div></div>
+        <div class="st"><div class="sn">2</div>
+          <div class="sb"><strong>Browser → Keycloak :8080</strong> — the central login page<br/>
+          <span class="dim"><code>/realms/nop-federation/…/auth?client_id=bu-a-client</code></span></div></div>
+        <div class="st"><div class="sn">3</div>
+          <div class="sb"><strong>Shopper enters credentials once</strong> — Keycloak validates</div></div>
+        <div class="st"><div class="sn">4</div>
+          <div class="sb"><strong>Keycloak redirects back to the store</strong> with a signed identity token</div></div>
+        <div class="st"><div class="sn">5</div>
+          <div class="sb"><strong>The plugin maps the token</strong> to a nopCommerce customer record<br/>
+          <strong>✅ Session established — same account works on BU-B too</strong></div></div>
+      </div>
+    </div>
+    <div style="display:flex;flex-direction:column;gap:.42em">
+      <div class="b"><h3>Two-Route Login Design</h3>
+        <p>The login uses two URL routes so the security token validation and the account mapping never interfere:</p>
+        <ul>
+          <li><code>/callback</code> — OIDC middleware validates the token</li>
+          <li><code>/login-callback</code> — plugin controller maps identity to Customer</li>
+        </ul></div>
+      <div class="b"><h3>What this means for shoppers</h3>
+        <p>A customer who registered on BU-A can log in to BU-B immediately. Their name and identity carry over. No extra steps.</p></div>
+      <div class="b"><h3>Config</h3>
+        <p>Realm: <code>nop-federation</code><br/>
+        Clients: <code>bu-a-client</code>, <code>bu-b-client</code><br/>
+        Exported: <code>FederationPlatform/keycloak-realm.json</code> — loads on startup</p></div>
+    </div>
+  </div>
+</div></section>
+
+<!-- 8 · OBSERVABILITY -->
+<section><div class="wrap">
+  <h2>Observability — Knowing the Pipeline is Healthy</h2>
+  <div class="c2" style="align-items:start">
+    <div style="display:flex;flex-direction:column;gap:.42em">
+      <div class="b"><h3>Key metrics (auto-collected)</h3>
+        <table>
+          <tr><th>Metric</th><th>Tells you</th></tr>
+          <tr><td>Outbox pending</td><td>Events waiting to be relayed</td></tr>
+          <tr><td>Dead messages</td><td>Events that failed 5 times</td></tr>
+          <tr><td>Oldest pending age</td><td>How far behind the relay is</td></tr>
+          <tr><td>Index doc count</td><td>Products in the search index</td></tr>
+          <tr><td>Service health</td><td>Is every container up?</td></tr>
+        </table></div>
+      <div class="b"><h3>Quick diagnostic commands</h3>
+        <pre><code class="language-bash">./platform.sh outbox bu-a 10
+docker logs federation_kafka_relay --tail 50
+curl http://localhost:7700/indexes/products/stats
+curl "http://localhost:5010/api/search?q=chair"</code></pre></div>
+    </div>
+    <div style="display:flex;flex-direction:column;gap:.42em">
+      <div class="b"><span class="pill pb">Infrastructure</span>
+        <ul style="margin:.2em 0 0 .9em">
+          <li>Pipeline E2E — all 5 stages at a glance</li>
+          <li>Outbox — pending, dead messages, event types</li>
+          <li>Relay — throughput, per-store health</li>
+          <li>Indexer — write rate, search rate, coverage</li>
+          <li>Latency SLA — p50/p95/p99, compliance %</li>
+          <li>Search — success rate, top queries</li>
+          <li>SSO — login rate, sessions, response times</li>
+        </ul></div>
+      <div class="b"><span class="pill pg">Business</span>
+        <ul style="margin:.2em 0 0 .9em">
+          <li>Business Pulse — product, order &amp; customer volumes</li>
+          <li>Demand Channels — search rate per store</li>
+          <li>Resilience &amp; SLA — availability, backlog</li>
+          <li><strong>BU Comparison</strong> — BU-A vs BU-B on every KPI</li>
+        </ul></div>
+      <p class="mu" style="margin-top:.3em">Grafana: <code>http://localhost:3000</code> · admin / admin</p>
+    </div>
+  </div>
+</div></section>
+
+<!-- 9 · SUMMARY -->
+<section><div class="wrap">
+  <h2>Summary</h2>
+  <div class="c3" style="margin-bottom:10px">
+    <div class="b" style="text-align:center;padding:10px 6px">
+      <div style="font-size:24px">🏗️</div>
+      <strong style="font-size:12px">Built on nopCommerce</strong>
+      <p class="mu" style="margin-top:4px">Core platform never modified. All features are plugins and standalone services — upgradeable at any time.</p>
+    </div>
+    <div class="b" style="text-align:center;padding:10px 6px">
+      <div style="font-size:24px">📬</div>
+      <strong style="font-size:12px">Events Never Get Lost</strong>
+      <p class="mu" style="margin-top:4px">Outbox pattern guarantees delivery even if Kafka or the indexer is temporarily down.</p>
+    </div>
+    <div class="b" style="text-align:center;padding:10px 6px">
+      <div style="font-size:24px">⚡</div>
+      <strong style="font-size:12px">~5 s End-to-End</strong>
+      <p class="mu" style="margin-top:4px">Admin save → visible in cross-BU search. Fully automatic, zero manual steps.</p>
+    </div>
+  </div>
+  <div class="c3">
+    <div class="b" style="text-align:center;padding:10px 6px">
+      <div style="font-size:24px">🔍</div>
+      <strong style="font-size:12px">Unified Search</strong>
+      <p class="mu" style="margin-top:4px">One search bar, both stores. Widget on each homepage + standalone Discovery Web portal.</p>
+    </div>
+    <div class="b" style="text-align:center;padding:10px 6px">
+      <div style="font-size:24px">🛡️</div>
+      <strong style="font-size:12px">Self-Healing</strong>
+      <p class="mu" style="margin-top:4px">Watchdog detects empty index → auto-replays outbox → full index rebuilt in ~30 s.</p>
+    </div>
+    <div class="b" style="text-align:center;padding:10px 6px">
+      <div style="font-size:24px">📊</div>
+      <strong style="font-size:12px">Full Visibility</strong>
+      <p class="mu" style="margin-top:4px">14 Grafana dashboards. Every stage tracked from event write to shopper search result.</p>
+    </div>
+  </div>
+  <div class="b" style="margin-top:8px;text-align:center">
+    <p style="font-size:10px;margin:0">
+      <code>docker compose -f docker-compose.bua.yml -f docker-compose.bub.yml -f docker-compose.federation.yml up -d</code>
+    </p>
+  </div>
+</div></section>
+
+</div></div>
+<script src="https://cdn.jsdelivr.net/npm/reveal.js@5.1.0/dist/reveal.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/reveal.js@5.1.0/plugin/highlight/highlight.js"></script>
+<script>
+  Reveal.initialize({
+    hash: true,
+    slideNumber: 'c/t',
+    transition: 'fade',
+    transitionSpeed: 'fast',
+    controls: true,
+    progress: true,
+    center: true,
+    width: 1280,
+    height: 720,
+    minScale: 0.1,
+    maxScale: 2.0,
+    plugins: [ RevealHighlight ]
+  });
+</script>
+</body>
+</html>

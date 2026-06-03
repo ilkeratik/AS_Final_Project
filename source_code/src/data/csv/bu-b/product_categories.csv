@@ -1,0 +1,4 @@
+ProductSku,CategoryName,IsFeaturedProduct,DisplayOrder
+HAH-DINE-001,Dining,True,1
+SUM-MATT-002,Sleep,True,1
+HAH-DESK-003,Office,False,2

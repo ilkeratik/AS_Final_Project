@@ -1,0 +1,108 @@
+{
+  "annotations": {"list":[]},
+  "editable": true,
+  "gnetId": null,
+  "id": null,
+  "links": [],
+  "panels": [
+    {
+      "datasource":"Prometheus",
+      "fieldConfig":{"defaults":{"unit":"ops","color":{"mode":"palette-classic"}},"overrides":[]},
+      "gridPos":{"h":7,"w":12,"x":0,"y":0},
+      "id":1,
+      "options":{"legend":{"displayMode":"table","placement":"bottom","calcs":["last","max"]}},
+      "targets":[{"expr":"rate(federation_outbox_processed[1m])","legendFormat":"{{bu}} publish rate","refId":"A"}],
+      "title":"Relay publish throughput (rows/s, from Outbox processed delta)",
+      "type":"timeseries"
+    },
+    {
+      "datasource":"Prometheus",
+      "fieldConfig":{"defaults":{"unit":"short","color":{"mode":"palette-classic"}},"overrides":[]},
+      "gridPos":{"h":7,"w":12,"x":12,"y":0},
+      "id":2,
+      "options":{"legend":{"displayMode":"table","placement":"bottom","calcs":["last"]}},
+      "targets":[{"expr":"federation_outbox_pending","legendFormat":"{{bu}} backlog","refId":"A"}],
+      "title":"Relay backlog (pending rows awaiting publish)",
+      "type":"timeseries"
+    },
+    {
+      "datasource":"Prometheus",
+      "fieldConfig":{"defaults":{"unit":"short","color":{"mode":"palette-classic"}},"overrides":[]},
+      "gridPos":{"h":5,"w":12,"x":0,"y":7},
+      "id":3,
+      "options":{"reduceOptions":{"calcs":["last"]}},
+      "targets":[{"expr":"federation_outbox_processed","legendFormat":"{{bu}}","refId":"A"}],
+      "title":"Total rows published (per BU)",
+      "type":"stat"
+    },
+    {
+      "datasource":"Prometheus",
+      "fieldConfig":{"defaults":{"unit":"short","color":{"mode":"thresholds"},"thresholds":{"steps":[{"color":"green","value":null},{"color":"red","value":1}]}},"overrides":[]},
+      "gridPos":{"h":5,"w":12,"x":12,"y":7},
+      "id":4,
+      "options":{"reduceOptions":{"calcs":["last"]}},
+      "targets":[{"expr":"sum(federation_outbox_deadletter)","refId":"A"}],
+      "title":"Failed deliveries / dead-letter (Attempts ≥ 5)",
+      "type":"stat"
+    },
+    {
+      "collapsed": false,
+      "gridPos": { "h": 1, "w": 24, "x": 0, "y": 12 },
+      "id": 100,
+      "title": "▶ Relay Efficiency & Failure Trends",
+      "type": "row"
+    },
+    {
+      "datasource":"Prometheus",
+      "description": "What % of messages have been successfully relayed vs dead-lettered. Below 99% needs investigation.",
+      "fieldConfig":{
+        "defaults":{
+          "unit":"percent",
+          "color":{"mode":"thresholds"},
+          "thresholds":{"steps":[{"color":"red","value":null},{"color":"orange","value":95},{"color":"green","value":99}]}
+        },"overrides":[]
+      },
+      "gridPos":{"h":6,"w":8,"x":0,"y":13},
+      "id":5,
+      "options":{"reduceOptions":{"calcs":["last"],"values":false},"colorMode":"background","orientation":"auto"},
+      "targets":[{"expr":"100 * sum(federation_outbox_processed) / (sum(federation_outbox_processed) + sum(federation_outbox_deadletter) + 0.001)","legendFormat":"Efficiency","refId":"A"}],
+      "title":"Relay Efficiency %",
+      "type":"stat"
+    },
+    {
+      "datasource":"Prometheus",
+      "description": "Is each BU's relay currently processing? Green if rate > 0, red if flatlined. If both are red and pending is growing, the relay loop has stopped.",
+      "fieldConfig":{
+        "defaults":{
+          "unit":"ops",
+          "color":{"mode":"thresholds"},
+          "thresholds":{"steps":[{"color":"red","value":null},{"color":"green","value":0.001}]}
+        },"overrides":[]
+      },
+      "gridPos":{"h":6,"w":8,"x":8,"y":13},
+      "id":6,
+      "options":{"reduceOptions":{"calcs":["last"],"values":false},"colorMode":"background","orientation":"horizontal"},
+      "targets":[{"expr":"rate(federation_outbox_processed[5m])","legendFormat":"{{bu}}","refId":"A"}],
+      "title":"Per-BU Relay Active? (rate > 0 = running)",
+      "type":"stat"
+    },
+    {
+      "datasource":"Prometheus",
+      "description": "Growth rate of dead-letter rows. Any positive slope = relay is failing and not recovering — check Kafka connectivity.",
+      "fieldConfig":{"defaults":{"unit":"ops","color":{"mode":"palette-classic"}},"overrides":[]},
+      "gridPos":{"h":6,"w":8,"x":16,"y":13},
+      "id":7,
+      "options":{"legend":{"displayMode":"table","placement":"bottom","calcs":["last"]}},
+      "targets":[{"expr":"deriv(federation_outbox_deadletter[5m])","legendFormat":"{{bu}} dead-letter growth","refId":"A"}],
+      "title":"Dead-Letter Growth Rate (derivative, rows/s)",
+      "type":"timeseries"
+    }
+  ],
+  "schemaVersion":30,
+  "tags":["federation","relay"],
+  "templating":{"list":[]},
+  "time":{"from":"now-15m","to":"now"},
+  "refresh":"5s",
+  "title":"Federation Relay Overview",
+  "version":2
+}

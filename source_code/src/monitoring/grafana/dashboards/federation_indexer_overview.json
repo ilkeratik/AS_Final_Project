@@ -1,0 +1,123 @@
+{
+  "annotations": {"list":[]},
+  "editable": true,
+  "gnetId": null,
+  "id": null,
+  "links": [],
+  "panels": [
+    {
+      "datasource":"Prometheus",
+      "fieldConfig":{"defaults":{"unit":"short","color":{"mode":"palette-classic"}},"overrides":[]},
+      "gridPos":{"h":7,"w":16,"x":0,"y":0},
+      "id":1,
+      "options":{"legend":{"displayMode":"table","placement":"bottom","calcs":["last"]}},
+      "targets":[{"expr":"meilisearch_index_docs_count","legendFormat":"index: {{index}}","refId":"A"}],
+      "title":"Meilisearch indexed documents (cross-BU total)",
+      "type":"timeseries"
+    },
+    {
+      "datasource":"Prometheus",
+      "fieldConfig":{"defaults":{"unit":"short","color":{"mode":"thresholds"},"thresholds":{"steps":[{"color":"red","value":null},{"color":"green","value":1}]}},"overrides":[]},
+      "gridPos":{"h":7,"w":8,"x":16,"y":0},
+      "id":2,
+      "options":{"reduceOptions":{"calcs":["last"]}},
+      "targets":[{"expr":"sum(meilisearch_index_docs_count)","refId":"A"}],
+      "title":"Total documents indexed (now)",
+      "type":"stat"
+    },
+    {
+      "datasource":"Prometheus",
+      "fieldConfig":{"defaults":{"unit":"ops","color":{"mode":"palette-classic"}},"overrides":[]},
+      "gridPos":{"h":6,"w":24,"x":0,"y":7},
+      "id":3,
+      "options":{"legend":{"displayMode":"table","placement":"bottom","calcs":["last","max"]}},
+      "targets":[{"expr":"sum by (path) (rate(meilisearch_http_requests_total[1m]))","legendFormat":"{{path}}","refId":"A"}],
+      "title":"Meilisearch request rate by endpoint (req/s)",
+      "type":"timeseries"
+    },
+    {
+      "collapsed": false,
+      "gridPos": { "h": 1, "w": 24, "x": 0, "y": 13 },
+      "id": 100,
+      "title": "▶ Indexer Performance",
+      "type": "row"
+    },
+    {
+      "datasource":"Prometheus",
+      "description": "Rate of change of the document count — positive slope means documents are being added, negative means deletes are outpacing writes.",
+      "fieldConfig":{"defaults":{"unit":"short","color":{"mode":"palette-classic"}},"overrides":[]},
+      "gridPos":{"h":8,"w":12,"x":0,"y":14},
+      "id":4,
+      "options":{"legend":{"displayMode":"table","placement":"bottom","calcs":["last","max"]}},
+      "targets":[{"expr":"deriv(meilisearch_index_docs_count[5m])","legendFormat":"{{index}} growth rate","refId":"A"}],
+      "title":"Index Growth Rate (docs/s, derivative)",
+      "type":"timeseries"
+    },
+    {
+      "datasource":"Prometheus",
+      "description": "Throughput of write operations (POST /indexes/.../documents) in req/s. Spikes after a relay burst.",
+      "fieldConfig":{"defaults":{"unit":"ops","color":{"mode":"palette-classic"}},"overrides":[]},
+      "gridPos":{"h":8,"w":12,"x":12,"y":14},
+      "id":5,
+      "options":{"legend":{"displayMode":"table","placement":"bottom","calcs":["last","max"]}},
+      "targets":[
+        {"expr":"sum(rate(meilisearch_http_requests_total{path=~\".*documents.*\"}[1m]))","legendFormat":"Document write req/s","refId":"A"},
+        {"expr":"sum(rate(meilisearch_http_requests_total{path=~\".*search.*\"}[1m]))","legendFormat":"Search req/s","refId":"B"}
+      ],
+      "title":"Write vs Search Request Rate",
+      "type":"timeseries"
+    },
+    {
+      "datasource":"Prometheus",
+      "description": "Percentage of published products that are indexed in Meilisearch. Below 90% = indexer is behind or watchdog hasn't rebuilt.",
+      "fieldConfig":{
+        "defaults":{
+          "unit":"percent",
+          "color":{"mode":"thresholds"},
+          "thresholds":{"steps":[{"color":"red","value":null},{"color":"orange","value":70},{"color":"green","value":90}]}
+        },"overrides":[]
+      },
+      "gridPos":{"h":5,"w":8,"x":0,"y":22},
+      "id":6,
+      "options":{"reduceOptions":{"calcs":["last"],"values":false},"colorMode":"background","orientation":"auto"},
+      "targets":[{"expr":"100 * sum(meilisearch_index_docs_count) / (sum(federation_catalog_products_published) + 0.001)","legendFormat":"Coverage","refId":"A"}],
+      "title":"Search Index Coverage (Indexed / Published %)",
+      "type":"stat"
+    },
+    {
+      "datasource":"Prometheus",
+      "description": "4xx and 5xx rate from Meilisearch. Sustained errors = indexer is sending malformed documents or Meilisearch is overloaded.",
+      "fieldConfig":{
+        "defaults":{
+          "unit":"percent",
+          "color":{"mode":"thresholds"},
+          "thresholds":{"steps":[{"color":"green","value":null},{"color":"orange","value":1},{"color":"red","value":5}]}
+        },"overrides":[]
+      },
+      "gridPos":{"h":5,"w":8,"x":8,"y":22},
+      "id":7,
+      "options":{"reduceOptions":{"calcs":["last"],"values":false},"colorMode":"value","orientation":"auto"},
+      "targets":[{"expr":"100 * sum(rate(meilisearch_http_requests_total{status_code=~\"4..|5..\"}[5m])) / (sum(rate(meilisearch_http_requests_total[5m])) + 0.001)","legendFormat":"Error %","refId":"A"}],
+      "title":"Meilisearch Error Rate %",
+      "type":"stat"
+    },
+    {
+      "datasource":"Prometheus",
+      "description": "Total Meilisearch requests since startup, broken by HTTP status family.",
+      "fieldConfig":{"defaults":{"unit":"short","color":{"mode":"palette-classic"}},"overrides":[]},
+      "gridPos":{"h":5,"w":8,"x":16,"y":22},
+      "id":8,
+      "options":{"reduceOptions":{"calcs":["last"],"values":false},"colorMode":"value","orientation":"horizontal"},
+      "targets":[{"expr":"sum by (status_code) (meilisearch_http_requests_total)","legendFormat":"HTTP {{status_code}}","refId":"A"}],
+      "title":"Total Requests by Status Code",
+      "type":"stat"
+    }
+  ],
+  "schemaVersion":30,
+  "tags":["federation","indexer"],
+  "templating":{"list":[]},
+  "time":{"from":"now-15m","to":"now"},
+  "refresh":"5s",
+  "title":"Federation Indexer Overview",
+  "version":2
+}

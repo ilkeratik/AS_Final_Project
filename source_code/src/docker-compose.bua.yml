@@ -1,0 +1,117 @@
+# docker-compose.bua.yml
+# Fully isolated BU-A stack: own Postgres, own nopCommerce, own auto-installer.
+# No shared infrastructure with BU-B - failure in one stack cannot cascade to the other.
+#
+# Ports:  web -> 5001   postgres -> 5433
+# Admin:  http://localhost:5001/admin   admin@bu-a.example.com / ${BUA_ADMIN_PASS}
+#
+# Start:  docker compose -f docker-compose.bua.yml up -d postgres-bua nopcommerce-bua
+# Reset:  BUA_DB_PASS=... BUA_ADMIN_PASS=... BU=a ./scripts/bootstrap/reset-and-install-bu.sh
+#
+# NOTE: project name 'nop-bua' keeps this stack isolated from nop-bub
+#       so 'docker compose ps/down/logs' never shows BU-B containers.
+#       Volumes are declared external (src_*) so they survive project renames
+#       and are NOT deleted by 'docker compose down -v'. The install script
+#       removes them explicitly when REMOVE_VOLUMES=true.
+
+name: nop-bua
+
+services:
+
+  # -- Postgres (BU-A only) -----------------------------------------------------
+  postgres-bua:
+    image: postgres:15-alpine
+    container_name: nopcommerce_bua_postgres
+    environment:
+      POSTGRES_DB: nopcommerce
+      POSTGRES_USER: nopcommerce_bua
+      POSTGRES_PASSWORD: ${BUA_DB_PASS}
+    ports:
+      - "5433:5432"
+    volumes:
+      - postgres-data-bua:/var/lib/postgresql/data
+      - ./scripts/bootstrap/postgres-init-extensions.sh:/docker-entrypoint-initdb.d/01-extensions.sh:ro
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U nopcommerce_bua -d nopcommerce"]
+      interval: 10s
+      timeout: 5s
+      retries: 10
+    networks:
+      default:
+      federation-net:
+        aliases:
+          - postgres-bua
+
+  # -- nopCommerce web (BU-A) ---------------------------------------------------
+  nopcommerce-bua:
+    build:
+      context: .
+      dockerfile: Presentation/Nop.Web/Dockerfile
+    image: nop-nopcommerce:latest   # shared tag — BU-B reuses same binary
+    container_name: nopcommerce_bua_web
+    depends_on:
+      postgres-bua:
+        condition: service_healthy
+    environment:
+      ASPNETCORE_ENVIRONMENT: Production
+      ASPNETCORE_URLS: http://+:80;http://+:5001
+      Keycloak__Authority: "http://localhost:8080/realms/nop-federation"
+      Keycloak__MetadataAddress: "http://keycloak:8080/realms/nop-federation/.well-known/openid-configuration"
+      Keycloak__ValidIssuer: "http://localhost:8080/realms/nop-federation"
+      Keycloak__ClientId: "bu-a-client"
+      Keycloak__ClientSecret: "bu-a-secret"
+    ports:
+      - "5001:80"
+    volumes:
+      - ./_appdata-bua:/app/App_Data
+      - wwwroot-thumbs-bua:/app/wwwroot/images/thumbs
+      - wwwroot-uploaded-bua:/app/wwwroot/images/uploaded
+    healthcheck:
+      test: ["CMD", "wget", "--quiet", "--tries=1", "--spider", "http://localhost/favicon.ico"]
+      interval: 10s
+      timeout: 5s
+      retries: 30
+      start_period: 30s
+    networks:
+      default:
+      federation-net:
+
+  # -- Auto-installer (one-shot, exits after install) ---------------------------
+  nopcommerce-auto-install:
+    build:
+      context: scripts/bootstrap   # tiny context — only the install script
+      dockerfile: auto-install.Dockerfile
+    image: nop-auto-install:latest
+    container_name: nopcommerce_bua_install
+    depends_on:
+      nopcommerce-bua:
+        condition: service_healthy
+    environment:
+      NOP_URL: "http://nopcommerce-bua"
+      DB_SERVER: "postgres-bua"
+      DB_NAME: "nopcommerce"
+      DB_USER: "nopcommerce_bua"
+      DB_PASS: "${BUA_DB_PASS}"
+      ADMIN_EMAIL: "admin@bu-a.example.com"
+      ADMIN_PASS: "${BUA_ADMIN_PASS}"
+      INSTALL_SAMPLE_DATA: "true"
+      DATA_PROVIDER: "PostgreSQL"
+    restart: "no"
+    networks:
+      - default
+
+volumes:
+  postgres-data-bua:
+    external: true
+    name: src_postgres-data-bua
+  wwwroot-thumbs-bua:
+    external: true
+    name: src_wwwroot-thumbs-bua
+  wwwroot-uploaded-bua:
+    external: true
+    name: src_wwwroot-uploaded-bua
+
+networks:
+  federation-net:
+    external: true
+    name: federation-net

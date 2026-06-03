@@ -1,0 +1,4 @@
+ProductSku,CategoryName,IsFeaturedProduct,DisplayOrder
+NSL-SOFA-001,Living Room,False,1
+NSL-BED-002,Bedroom,False,1
+PAH-FIRE-003,Living Room,True,2

@@ -1,0 +1,177 @@
+{
+  "annotations": { "list": [] },
+  "editable": true,
+  "id": null,
+  "links": [],
+  "panels": [
+    {
+      "datasource": "Prometheus",
+      "fieldConfig": { "defaults": { "unit": "short", "color": { "mode": "palette-classic" } }, "overrides": [] },
+      "gridPos": { "h": 8, "w": 12, "x": 0, "y": 0 },
+      "id": 1,
+      "options": { "legend": { "displayMode": "table", "placement": "bottom", "calcs": ["last"] } },
+      "targets": [
+        { "expr": "sum by (bu, event_type) (federation_outbox_events_last_24h{event_type=~\"product.published|product.updated|product.deleted|product.unpublished\"})", "legendFormat": "{{bu}} - {{event_type}}", "refId": "A" }
+      ],
+      "title": "Product Lifecycle Events (Last 24h)",
+      "type": "timeseries"
+    },
+    {
+      "datasource": "Prometheus",
+      "fieldConfig": { "defaults": { "unit": "short", "color": { "mode": "palette-classic" } }, "overrides": [] },
+      "gridPos": { "h": 8, "w": 12, "x": 12, "y": 0 },
+      "id": 2,
+      "options": { "legend": { "displayMode": "table", "placement": "bottom", "calcs": ["last"] } },
+      "targets": [
+        { "expr": "sum by (bu, event_type) (federation_outbox_events_last_24h{event_type=~\"order\\..*|customer\\..*\"})", "legendFormat": "{{bu}} - {{event_type}}", "refId": "A" }
+      ],
+      "title": "Order and Customer Events (Last 24h)",
+      "type": "timeseries"
+    },
+    {
+      "datasource": "Prometheus",
+      "fieldConfig": {
+        "defaults": {
+          "color": { "mode": "thresholds" },
+          "thresholds": { "steps": [{ "color": "green", "value": null }, { "color": "orange", "value": 10 }, { "color": "red", "value": 30 }] },
+          "unit": "short"
+        },
+        "overrides": []
+      },
+      "gridPos": { "h": 6, "w": 8, "x": 0, "y": 8 },
+      "id": 3,
+      "options": { "reduceOptions": { "calcs": ["last"], "values": false }, "orientation": "auto", "colorMode": "value" },
+      "targets": [
+        { "expr": "sum(federation_outbox_events_pending{event_type=~\"product.published|product.updated|product.deleted|product.unpublished\"})", "refId": "A" }
+      ],
+      "title": "Pending Product Events",
+      "type": "stat"
+    },
+    {
+      "datasource": "Prometheus",
+      "fieldConfig": {
+        "defaults": {
+          "color": { "mode": "thresholds" },
+          "thresholds": { "steps": [{ "color": "green", "value": null }, { "color": "orange", "value": 10 }, { "color": "red", "value": 30 }] },
+          "unit": "short"
+        },
+        "overrides": []
+      },
+      "gridPos": { "h": 6, "w": 8, "x": 8, "y": 8 },
+      "id": 4,
+      "options": { "reduceOptions": { "calcs": ["last"], "values": false }, "orientation": "auto", "colorMode": "value" },
+      "targets": [
+        { "expr": "sum(federation_outbox_events_pending{event_type=~\"order\\..*|customer\\..*\"})", "refId": "A" }
+      ],
+      "title": "Pending Order/Customer Events",
+      "type": "stat"
+    },
+    {
+      "datasource": "Prometheus",
+      "fieldConfig": { "defaults": { "unit": "short", "color": { "mode": "palette-classic" } }, "overrides": [] },
+      "gridPos": { "h": 6, "w": 8, "x": 16, "y": 8 },
+      "id": 5,
+      "options": { "legend": { "displayMode": "table", "placement": "right", "calcs": ["last"] } },
+      "targets": [
+        { "expr": "sum by (business_event) (federation_activity_business_last_24h)", "legendFormat": "{{business_event}}", "refId": "A" }
+      ],
+      "title": "Admin Business Actions (Last 24h)",
+      "type": "timeseries"
+    },
+    {
+      "datasource": "Prometheus",
+      "fieldConfig": {
+        "defaults": { "unit": "short", "color": { "mode": "thresholds" },
+          "thresholds": { "steps": [{ "color": "blue", "value": null }] }
+        }, "overrides": []
+      },
+      "gridPos": { "h": 5, "w": 8, "x": 0, "y": 14 },
+      "id": 6,
+      "options": { "reduceOptions": { "calcs": ["last"], "values": false }, "orientation": "auto", "colorMode": "value", "graphMode": "area" },
+      "targets": [
+        { "expr": "sum(federation_outbox_events_last_1h{event_type=~\"product.*\"})", "refId": "A" }
+      ],
+      "title": "Product Events This Hour",
+      "type": "stat"
+    },
+    {
+      "datasource": "Prometheus",
+      "fieldConfig": {
+        "defaults": { "unit": "short", "color": { "mode": "thresholds" },
+          "thresholds": { "steps": [{ "color": "purple", "value": null }] }
+        }, "overrides": []
+      },
+      "gridPos": { "h": 5, "w": 8, "x": 8, "y": 14 },
+      "id": 7,
+      "options": { "reduceOptions": { "calcs": ["last"], "values": false }, "orientation": "auto", "colorMode": "value", "graphMode": "area" },
+      "targets": [
+        { "expr": "sum(federation_outbox_events_last_1h{event_type=~\"order.*\"})", "refId": "A" }
+      ],
+      "title": "Order Events This Hour",
+      "type": "stat"
+    },
+    {
+      "datasource": "Prometheus",
+      "fieldConfig": {
+        "defaults": { "unit": "short", "color": { "mode": "thresholds" },
+          "thresholds": { "steps": [{ "color": "teal", "value": null }] }
+        }, "overrides": []
+      },
+      "gridPos": { "h": 5, "w": 8, "x": 16, "y": 14 },
+      "id": 8,
+      "options": { "reduceOptions": { "calcs": ["last"], "values": false }, "orientation": "auto", "colorMode": "value", "graphMode": "area" },
+      "targets": [
+        { "expr": "sum(federation_outbox_events_last_1h{event_type=~\"customer.*\"})", "refId": "A" }
+      ],
+      "title": "Customer Events This Hour",
+      "type": "stat"
+    },
+    {
+      "datasource": "Prometheus",
+      "fieldConfig": {
+        "defaults": { "unit": "short", "color": { "mode": "palette-classic" },
+          "custom": { "fillOpacity": 70 }
+        }, "overrides": []
+      },
+      "gridPos": { "h": 8, "w": 14, "x": 0, "y": 19 },
+      "id": 9,
+      "options": {
+        "orientation": "horizontal",
+        "reduceOptions": { "calcs": ["last"], "values": false },
+        "displayMode": "gradient",
+        "showUnfilled": true
+      },
+      "targets": [
+        { "expr": "sum by (event_type) (federation_outbox_events_total)", "legendFormat": "{{event_type}}", "refId": "A" }
+      ],
+      "title": "Event Type Distribution — All Time",
+      "type": "bargauge"
+    },
+    {
+      "datasource": "Prometheus",
+      "fieldConfig": {
+        "defaults": { "unit": "short", "color": { "mode": "thresholds" },
+          "thresholds": { "steps": [{ "color": "green", "value": null }] }
+        }, "overrides": []
+      },
+      "gridPos": { "h": 8, "w": 10, "x": 14, "y": 19 },
+      "id": 10,
+      "options": { "reduceOptions": { "calcs": ["last"], "values": false }, "orientation": "auto", "colorMode": "background", "graphMode": "none" },
+      "targets": [
+        { "expr": "sum(federation_outbox_processed)", "legendFormat": "All BUs", "refId": "A" },
+        { "expr": "federation_outbox_processed", "legendFormat": "{{bu}}", "refId": "B" }
+      ],
+      "title": "Lifetime Events Relayed to Kafka",
+      "type": "stat"
+    }
+  ],
+  "refresh": "10s",
+  "schemaVersion": 30,
+  "tags": ["federation", "business", "kpi"],
+  "templating": { "list": [] },
+  "time": { "from": "now-24h", "to": "now" },
+  "timezone": "browser",
+  "title": "Federation Business Pulse",
+  "version": 1
+}
+

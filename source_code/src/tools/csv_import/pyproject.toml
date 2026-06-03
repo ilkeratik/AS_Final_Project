@@ -1,0 +1,12 @@
+[build-system]
+requires = ["setuptools>=69"]
+build-backend = "setuptools.build_meta"
+
+[project]
+name = "nopcommerce-csv-import"
+version = "0.1.0"
+description = "CSV validation helpers for nopCommerce BU catalog imports"
+requires-python = ">=3.9"
+
+[tool.setuptools]
+py-modules = ["validate_csv"]

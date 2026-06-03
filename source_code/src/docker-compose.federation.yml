@@ -1,0 +1,220 @@
+# docker-compose.phase2.yml
+# Phase 2 — Shared Experience / Federated Commerce Platform
+#
+# Provides:
+#   - Keycloak                       → http://localhost:8080 (admin/admin)
+#   - Kafka + KRaft (no Zookeeper)   → internal broker on kafka:9092
+#   - Meilisearch                    → http://localhost:7700
+#   - Federation.KafkaRelay          → polls BU-A + BU-B outbox tables → Kafka
+#   - Federation.MeilisearchIndexer  → Kafka → Meilisearch products index
+#   - Federation.Discovery.Api       → http://localhost:5010/api/search
+#
+# Prerequisites:
+#   1. Both BUs must be running:  ./platform.sh start
+#   2. Outbox plugin installed + configured in both BU admin panels
+#
+# Usage:
+#   docker compose -f docker-compose.phase2.yml up -d
+#   docker compose -f docker-compose.phase2.yml down
+#
+# Credentials from .env (same file as BU compose):
+#   BUA_DB_PASS / BUB_DB_PASS
+
+name: federation
+
+services:
+
+  # ── Keycloak (Identity Provider) ───────────────────────────────────────────
+  keycloak:
+    image: quay.io/keycloak/keycloak:25.0.1
+    container_name: federation_keycloak
+    command: start-dev --import-realm
+    environment:
+      # Use the BU-A postgres instance — isolated in its own schema.
+      KC_DB: postgres
+      KC_DB_URL_HOST: postgres-bua
+      KC_DB_URL_DATABASE: nopcommerce
+      KC_DB_SCHEMA: keycloak
+      KC_DB_USERNAME: nopcommerce_bua
+      KC_DB_PASSWORD: "${BUA_DB_PASS}"
+      KC_HTTP_ENABLED: "true"
+      # Keycloak 25 hostname v2: use KC_HOSTNAME (not KC_HOSTNAME_URL which was v1).
+      # Front-channel URLs (browser-facing auth endpoint) will always use localhost:8080.
+      KC_HOSTNAME: "http://localhost:8080"
+      # Back-channel dynamic: when BU containers call keycloak:8080 for token exchange,
+      # Keycloak uses the request hostname so token endpoint resolves internally.
+      KC_HOSTNAME_BACKCHANNEL_DYNAMIC: "true"
+      KEYCLOAK_ADMIN: admin
+      KEYCLOAK_ADMIN_PASSWORD: admin
+    ports:
+      - "8080:8080"
+    volumes:
+      - ./FederationPlatform/keycloak-realm.json:/opt/keycloak/data/import/realm.json
+    healthcheck:
+      test: ["CMD-SHELL", "bash -c 'exec 3<>/dev/tcp/localhost/8080' 2>/dev/null || exit 1"]
+      interval: 15s
+      timeout: 10s
+      retries: 12
+      start_period: 90s
+    networks:
+      - federation-net
+
+  # ── Kafka (KRaft mode, single broker) ──────────────────────────────────────
+  kafka:
+    image: apache/kafka:3.7.0
+    container_name: federation_kafka
+    environment:
+      KAFKA_NODE_ID: 1
+      KAFKA_PROCESS_ROLES: broker,controller
+      KAFKA_LISTENERS: PLAINTEXT://0.0.0.0:9092,CONTROLLER://0.0.0.0:9093
+      KAFKA_ADVERTISED_LISTENERS: PLAINTEXT://kafka:9092
+      KAFKA_CONTROLLER_QUORUM_VOTERS: 1@kafka:9093
+      KAFKA_CONTROLLER_LISTENER_NAMES: CONTROLLER
+      KAFKA_LISTENER_SECURITY_PROTOCOL_MAP: PLAINTEXT:PLAINTEXT,CONTROLLER:PLAINTEXT
+      KAFKA_OFFSETS_TOPIC_REPLICATION_FACTOR: 1
+      KAFKA_TRANSACTION_STATE_LOG_REPLICATION_FACTOR: 1
+      KAFKA_TRANSACTION_STATE_LOG_MIN_ISR: 1
+      KAFKA_AUTO_CREATE_TOPICS_ENABLE: "true"
+      # Pre-declare the three Published-Language topics (ADR-2, ADR-3)
+      KAFKA_CREATE_TOPICS: "federation.products:1:1,orders.placed:1:1,customers.created:1:1"
+      KAFKA_LOG_DIRS: /var/lib/kafka/data
+      CLUSTER_ID: "MkU3OEVBNTcwNTJENDM2Qg"  # stable ID — keep constant
+    ports:
+      - "9092:9092"
+    volumes:
+      - kafka-data:/var/lib/kafka/data
+    healthcheck:
+      test: ["CMD-SHELL", "/opt/kafka/bin/kafka-broker-api-versions.sh --bootstrap-server localhost:9092 >/dev/null 2>&1"]
+      interval: 15s
+      timeout: 10s
+      retries: 10
+      start_period: 30s
+    networks:
+      - federation-net
+
+  # ── Meilisearch ─────────────────────────────────────────────────────────────
+  meilisearch:
+    image: getmeili/meilisearch:v1.8
+    container_name: federation_meilisearch
+    environment:
+      MEILI_ENV: development
+      MEILI_MASTER_KEY: "${MEILI_MASTER_KEY:-}"
+      # Expose Prometheus metrics at /metrics (meilisearch_index_docs_count, request rates…)
+      MEILI_EXPERIMENTAL_ENABLE_METRICS: "true"
+    ports:
+      - "7700:7700"
+    volumes:
+      - meili-data:/meili_data
+    healthcheck:
+      test: ["CMD-SHELL", "wget -q -O /dev/null http://127.0.0.1:7700/health || exit 1"]
+      interval: 10s
+      timeout: 5s
+      retries: 10
+      start_period: 15s
+    networks:
+      - federation-net
+
+  # ── Kafka Relay (polls BU outbox tables → Kafka) ───────────────────────────
+  kafka-relay:
+    build:
+      context: .
+      dockerfile: FederationPlatform/Federation.KafkaRelay/Dockerfile
+    container_name: federation_kafka_relay
+    depends_on:
+      kafka:
+        condition: service_healthy
+    environment:
+      Kafka__BootstrapServers: "kafka:9092"
+      Meilisearch__Url: "http://meilisearch:7700"
+      # BU-A: relay all three topics (products, orders, customers)
+      BusinessUnits__bua__StoreCode: "bu-a"
+      BusinessUnits__bua__ConnectionString: "Host=postgres-bua;Port=5432;Database=nopcommerce;Username=nopcommerce_bua;Password=${BUA_DB_PASS}"
+      # BU-B
+      BusinessUnits__bub__StoreCode: "bu-b"
+      BusinessUnits__bub__ConnectionString: "Host=postgres-bub;Port=5432;Database=nopcommerce;Username=nopcommerce_bub;Password=${BUB_DB_PASS}"
+    restart: unless-stopped
+    networks:
+      - federation-net
+
+  # ── Meilisearch Indexer (Kafka → Meilisearch) ─────────────────────────────
+  meili-indexer:
+    build:
+      context: .
+      dockerfile: FederationPlatform/Federation.MeilisearchIndexer/Dockerfile
+    container_name: federation_meili_indexer
+    depends_on:
+      kafka:
+        condition: service_healthy
+      meilisearch:
+        condition: service_healthy
+    environment:
+      Kafka__BootstrapServers: "kafka:9092"
+      Kafka__ConsumerGroupId: "federation-indexer"
+      Kafka__Topic: "federation.products"
+      Meilisearch__Url: "http://meilisearch:7700"
+      Meilisearch__ApiKey: "${MEILI_MASTER_KEY:-}"
+    restart: unless-stopped
+    networks:
+      - federation-net
+
+  # ── Discovery API (Meilisearch → cross-BU search HTTP API) ─────────────────
+  discovery-api:
+    build:
+      context: .
+      dockerfile: FederationPlatform/Federation.Discovery.Api/Dockerfile
+    container_name: federation_discovery_api
+    depends_on:
+      meilisearch:
+        condition: service_healthy
+    environment:
+      ASPNETCORE_URLS: "http://+:8080"
+      Meilisearch__Url: "http://meilisearch:7700"
+      Meilisearch__ApiKey: "${MEILI_MASTER_KEY:-}"
+    ports:
+      - "5010:8080"
+    healthcheck:
+      test: ["CMD-SHELL", "curl -fs http://127.0.0.1:8080/health || exit 1"]
+      interval: 10s
+      timeout: 5s
+      retries: 6
+      start_period: 15s
+    restart: unless-stopped
+    networks:
+      - federation-net
+
+  # ── Discovery Web (shared experience UI) ─────────────────────────────────────
+  discovery-web:
+    build:
+      context: .
+      dockerfile: FederationPlatform/Federation.Discovery.Web/Dockerfile
+    container_name: federation_discovery_web
+    depends_on:
+      discovery-api:
+        condition: service_healthy
+    environment:
+      ASPNETCORE_URLS: "http://+:8080"
+      DiscoveryApi__Url: "http://discovery-api:8080"
+    ports:
+      - "5011:8080"
+    healthcheck:
+      test: ["CMD-SHELL", "curl -fs http://127.0.0.1:8080/health || exit 1"]
+      interval: 10s
+      timeout: 5s
+      retries: 6
+      start_period: 15s
+    restart: unless-stopped
+    networks:
+      - federation-net
+
+# ── Networks ─────────────────────────────────────────────────────────────────
+networks:
+  federation-net:
+    # External: pre-created by platform.sh start so BU postgres containers
+    # can also be connected to it with docker network connect.
+    name: federation-net
+    external: true
+
+# ── Volumes ───────────────────────────────────────────────────────────────────
+volumes:
+  kafka-data:
+  meili-data:

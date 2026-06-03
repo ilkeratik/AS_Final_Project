@@ -1,0 +1,41 @@
+{
+  "annotations": { "list": [] },
+  "editable": true,
+  "gnetId": null,
+  "id": null,
+  "links": [],
+  "panels": [
+    {
+      "datasource": "Prometheus",
+      "fieldConfig": {"defaults": {}, "overrides": []},
+      "gridPos": {"h": 4, "w": 8, "x": 0, "y": 0},
+      "id": 1,
+      "targets": [
+        { "expr": "probe_success{job=\"blackbox-probes\"}", "refId": "A" }
+      ],
+      "title": "Blackbox: Probe success (1=ok, 0=fail)",
+      "type": "timeseries"
+    },
+    {
+      "datasource": "Prometheus",
+      "fieldConfig": {"defaults": {}, "overrides": []},
+      "gridPos": {"h": 4, "w": 4, "x": 8, "y": 0},
+      "id": 2,
+      "options": {"reduceOptions": {"calcs": ["last"], "values": false}},
+      "targets": [
+        { "expr": "probe_success{job=\"blackbox-probes\"}", "refId": "A" }
+      ],
+      "title": "Current probe success (last)",
+      "type": "stat"
+    }
+  ],
+  "schemaVersion": 30,
+  "style": "",
+  "tags": ["federation","availability"],
+  "templating": {"list": []},
+  "time": {"from": "now-15m", "to": "now"},
+  "timezone": "browser",
+  "title": "Federation Availability",
+  "version": 1
+}
+

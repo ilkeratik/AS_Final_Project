@@ -1,0 +1,80 @@
+# Git
+.git
+.gitignore
+.gitattributes
+
+# Build and IDE
+bin/
+obj/
+.vs/
+.vscode/
+*.sln.iml
+node_modules/
+.next/
+
+# Documentation
+*.md
+.github/
+
+# Environment
+.env
+.env.local
+.env*.local
+
+# Test/Coverage
+coverage/
+test-results/
+.nyc_output/
+
+# Build outputs
+dist/
+build/
+
+# OS
+.DS_Store
+Thumbs.db
+
+# IDE Configs
+.idea/
+.vscode/
+*.swp
+*.swo
+
+# NuGet cache
+.nuget/
+
+# Docker (avoid recursive issues)
+Dockerfile
+docker-compose*.yml
+
+# Plugins - only include what's necessary for runtime
+Plugins/*/obj/
+Plugins/*/.next/
+Plugins/*/node_modules/
+Plugins/*/.vscode/
+Plugins/*/.idea/
+
+# Local app data (runtime state, credentials, keys)
+_appdata/
+_appdata-*/
+
+# Data files
+data/
+
+# Tools and scripts
+tools/
+# Exclude most scripts but keep auto-install-http.sh for installer image
+scripts/reset-*.sh
+scripts/split-*.sh
+scripts/fix-*.sh
+scripts/*.py
+
+# Postgres init scripts (handled by volume mounts)
+postgres-*.sql
+postgres-*.sh
+
+# Tests and demo
+Tests/
+demo/
+
+

@@ -1,0 +1,4 @@
+ProductSku,ManufacturerName,IsFeaturedProduct,DisplayOrder
+NSL-SOFA-001,Northstar Living,True,1
+NSL-BED-002,Northstar Living,False,2
+PAH-FIRE-003,Pine and Hearth,True,1

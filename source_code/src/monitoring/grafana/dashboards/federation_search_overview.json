@@ -1,0 +1,119 @@
+{
+  "annotations": {"list":[]},
+  "editable": true,
+  "gnetId": null,
+  "id": null,
+  "links": [],
+  "panels": [
+    {
+      "datasource":"Prometheus",
+      "fieldConfig":{"defaults":{"unit":"ops","color":{"mode":"palette-classic"}},"overrides":[]},
+      "gridPos":{"h":7,"w":12,"x":0,"y":0},
+      "id":1,
+      "options":{"legend":{"displayMode":"table","placement":"bottom","calcs":["last","max"]}},
+      "targets":[{"expr":"sum by (status) (rate(meilisearch_http_requests_total[1m]))","legendFormat":"HTTP {{status}}","refId":"A"}],
+      "title":"Search engine request rate by HTTP status (req/s)",
+      "type":"timeseries"
+    },
+    {
+      "datasource":"Prometheus",
+      "fieldConfig":{"defaults":{"unit":"ops","color":{"mode":"palette-classic"}},"overrides":[]},
+      "gridPos":{"h":7,"w":12,"x":12,"y":0},
+      "id":2,
+      "options":{"legend":{"displayMode":"table","placement":"bottom","calcs":["last","max"]}},
+      "targets":[{"expr":"sum by (path) (rate(meilisearch_http_requests_total{path=~\"/indexes.*\"}[1m]))","legendFormat":"{{path}}","refId":"A"}],
+      "title":"Index operations rate (search + upsert paths)",
+      "type":"timeseries"
+    },
+    {
+      "datasource":"Prometheus",
+      "fieldConfig":{"defaults":{"unit":"short","color":{"mode":"palette-classic"}},"overrides":[]},
+      "gridPos":{"h":6,"w":24,"x":0,"y":7},
+      "id":3,
+      "options":{"reduceOptions":{"calcs":["last"]}},
+      "targets":[{"expr":"meilisearch_index_docs_count","legendFormat":"index: {{index}}","refId":"A"}],
+      "title":"Documents currently indexed",
+      "type":"stat"
+    },
+    {
+      "collapsed": false,
+      "gridPos": { "h": 1, "w": 24, "x": 0, "y": 13 },
+      "id": 100,
+      "title": "▶ Quality & Coverage",
+      "type": "row"
+    },
+    {
+      "datasource":"Prometheus",
+      "description": "% of search requests that returned HTTP 200. Below 99% = Meilisearch errors affecting end users.",
+      "fieldConfig":{
+        "defaults":{
+          "unit":"percent",
+          "color":{"mode":"thresholds"},
+          "thresholds":{"steps":[{"color":"red","value":null},{"color":"orange","value":95},{"color":"green","value":99}]}
+        },"overrides":[]
+      },
+      "gridPos":{"h":5,"w":8,"x":0,"y":14},
+      "id":4,
+      "options":{"reduceOptions":{"calcs":["last"],"values":false},"colorMode":"background","orientation":"auto"},
+      "targets":[{"expr":"100 * sum(rate(meilisearch_http_requests_total{status_code=\"200\",path=~\".*search.*\"}[5m])) / (sum(rate(meilisearch_http_requests_total{path=~\".*search.*\"}[5m])) + 0.001)","legendFormat":"Success %","refId":"A"}],
+      "title":"Search Success Rate %",
+      "type":"stat"
+    },
+    {
+      "datasource":"Prometheus",
+      "description": "Ratio of indexed documents to published products. Below 90% = the indexer is behind.",
+      "fieldConfig":{
+        "defaults":{
+          "unit":"percent",
+          "color":{"mode":"thresholds"},
+          "thresholds":{"steps":[{"color":"red","value":null},{"color":"orange","value":70},{"color":"green","value":90}]}
+        },"overrides":[]
+      },
+      "gridPos":{"h":5,"w":8,"x":8,"y":14},
+      "id":5,
+      "options":{"reduceOptions":{"calcs":["last"],"values":false},"colorMode":"background","orientation":"auto"},
+      "targets":[{"expr":"100 * sum(meilisearch_index_docs_count) / (sum(federation_catalog_products_published) + 0.001)","legendFormat":"Coverage","refId":"A"}],
+      "title":"Search Index Coverage (Indexed / Published %)",
+      "type":"stat"
+    },
+    {
+      "datasource":"Prometheus",
+      "description": "Total search requests received in the last 24 hours.",
+      "fieldConfig":{
+        "defaults":{
+          "unit":"short",
+          "color":{"mode":"thresholds"},
+          "thresholds":{"steps":[{"color":"blue","value":null}]}
+        },"overrides":[]
+      },
+      "gridPos":{"h":5,"w":8,"x":16,"y":14},
+      "id":6,
+      "options":{"reduceOptions":{"calcs":["last"],"values":false},"colorMode":"background","graphMode":"area","orientation":"auto"},
+      "targets":[{"expr":"sum(increase(meilisearch_http_requests_total{path=~\".*search.*\"}[24h]))","legendFormat":"Searches today","refId":"A"}],
+      "title":"Total Searches (Last 24h)",
+      "type":"stat"
+    },
+    {
+      "datasource":"Prometheus",
+      "description": "Search request volume trend over time. Useful for spotting traffic patterns and demand spikes.",
+      "fieldConfig":{"defaults":{"unit":"ops","color":{"mode":"palette-classic"}},"overrides":[]},
+      "gridPos":{"h":8,"w":24,"x":0,"y":19},
+      "id":7,
+      "options":{"legend":{"displayMode":"table","placement":"bottom","calcs":["last","max"]}},
+      "targets":[
+        {"expr":"sum(rate(meilisearch_http_requests_total{path=~\".*search.*\",status_code=\"200\"}[5m]))","legendFormat":"Successful searches/s","refId":"A"},
+        {"expr":"sum(rate(meilisearch_http_requests_total{path=~\".*search.*\",status_code=~\"4..|5..\"}[5m]))","legendFormat":"Failed searches/s","refId":"B"}
+      ],
+      "title":"Search Request Volume Over Time",
+      "type":"timeseries"
+    }
+  ],
+  "schemaVersion":30,
+  "tags":["federation","search","meilisearch"],
+  "templating":{"list":[]},
+  "time":{"from":"now-15m","to":"now"},
+  "refresh":"5s",
+  "title":"Federation Search Engine (Meilisearch)",
+  "version":1
+}
+

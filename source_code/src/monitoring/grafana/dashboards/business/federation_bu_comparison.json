@@ -1,0 +1,297 @@
+{
+  "annotations": { "list": [] },
+  "editable": true,
+  "id": null,
+  "links": [],
+  "panels": [
+    {
+      "collapsed": false,
+      "gridPos": { "h": 1, "w": 24, "x": 0, "y": 0 },
+      "id": 100,
+      "title": "▶ Catalog Snapshot",
+      "type": "row"
+    },
+    {
+      "datasource": "Prometheus",
+      "fieldConfig": {
+        "defaults": {
+          "unit": "short",
+          "color": { "mode": "thresholds" },
+          "thresholds": { "steps": [{ "color": "blue", "value": null }] }
+        }, "overrides": []
+      },
+      "gridPos": { "h": 5, "w": 6, "x": 0, "y": 1 },
+      "id": 1,
+      "options": { "reduceOptions": { "calcs": ["last"], "values": false }, "colorMode": "background", "graphMode": "area", "orientation": "auto" },
+      "targets": [{ "expr": "federation_catalog_products_published{bu=\"bu-a\"}", "legendFormat": "BU-A", "refId": "A" }],
+      "title": "BU-A Published Products",
+      "type": "stat"
+    },
+    {
+      "datasource": "Prometheus",
+      "fieldConfig": {
+        "defaults": {
+          "unit": "short",
+          "color": { "mode": "thresholds" },
+          "thresholds": { "steps": [{ "color": "purple", "value": null }] }
+        }, "overrides": []
+      },
+      "gridPos": { "h": 5, "w": 6, "x": 6, "y": 1 },
+      "id": 2,
+      "options": { "reduceOptions": { "calcs": ["last"], "values": false }, "colorMode": "background", "graphMode": "area", "orientation": "auto" },
+      "targets": [{ "expr": "federation_catalog_products_published{bu=\"bu-b\"}", "legendFormat": "BU-B", "refId": "A" }],
+      "title": "BU-B Published Products",
+      "type": "stat"
+    },
+    {
+      "datasource": "Prometheus",
+      "description": "Side-by-side published vs unpublished products for each BU.",
+      "fieldConfig": {
+        "defaults": { "unit": "short", "color": { "mode": "palette-classic" },
+          "custom": { "fillOpacity": 70 }
+        }, "overrides": []
+      },
+      "gridPos": { "h": 5, "w": 12, "x": 12, "y": 1 },
+      "id": 3,
+      "options": {
+        "orientation": "horizontal",
+        "reduceOptions": { "calcs": ["last"], "values": false },
+        "displayMode": "gradient",
+        "showUnfilled": true
+      },
+      "targets": [
+        { "expr": "federation_catalog_products_published", "legendFormat": "{{bu}} published", "refId": "A" },
+        { "expr": "federation_catalog_products_unpublished", "legendFormat": "{{bu}} unpublished", "refId": "B" }
+      ],
+      "title": "Published vs Unpublished per BU",
+      "type": "bargauge"
+    },
+    {
+      "collapsed": false,
+      "gridPos": { "h": 1, "w": 24, "x": 0, "y": 6 },
+      "id": 101,
+      "title": "▶ Event Pipeline — who is producing more?",
+      "type": "row"
+    },
+    {
+      "datasource": "Prometheus",
+      "description": "Cumulative events dispatched to Kafka per BU. Diverging lines mean one BU is more active — or one has stalled.",
+      "fieldConfig": { "defaults": { "unit": "short", "color": { "mode": "palette-classic" } }, "overrides": [] },
+      "gridPos": { "h": 8, "w": 12, "x": 0, "y": 7 },
+      "id": 4,
+      "options": { "legend": { "displayMode": "table", "placement": "bottom", "calcs": ["last", "max"] } },
+      "targets": [{ "expr": "federation_outbox_processed", "legendFormat": "{{bu}} processed", "refId": "A" }],
+      "title": "Total Events Processed: BU-A vs BU-B",
+      "type": "timeseries"
+    },
+    {
+      "datasource": "Prometheus",
+      "description": "Current relay throughput per second per BU. Both lines should be similar under equal load. One flatline = relay dead.",
+      "fieldConfig": { "defaults": { "unit": "ops", "color": { "mode": "palette-classic" } }, "overrides": [] },
+      "gridPos": { "h": 8, "w": 12, "x": 12, "y": 7 },
+      "id": 5,
+      "options": { "legend": { "displayMode": "table", "placement": "bottom", "calcs": ["last", "mean"] } },
+      "targets": [{ "expr": "rate(federation_outbox_processed[2m])", "legendFormat": "{{bu}} relay rate", "refId": "A" }],
+      "title": "Relay Throughput per BU (events/s)",
+      "type": "timeseries"
+    },
+    {
+      "collapsed": false,
+      "gridPos": { "h": 1, "w": 24, "x": 0, "y": 15 },
+      "id": 102,
+      "title": "▶ Health — backlog, failures, availability",
+      "type": "row"
+    },
+    {
+      "datasource": "Prometheus",
+      "fieldConfig": {
+        "defaults": {
+          "unit": "short",
+          "color": { "mode": "thresholds" },
+          "thresholds": { "steps": [{ "color": "green", "value": null }, { "color": "orange", "value": 20 }, { "color": "red", "value": 100 }] }
+        }, "overrides": []
+      },
+      "gridPos": { "h": 5, "w": 6, "x": 0, "y": 16 },
+      "id": 6,
+      "options": { "reduceOptions": { "calcs": ["last"], "values": false }, "colorMode": "background", "orientation": "auto" },
+      "targets": [{ "expr": "federation_outbox_pending{bu=\"bu-a\"}", "legendFormat": "BU-A backlog", "refId": "A" }],
+      "title": "BU-A Pending Backlog",
+      "type": "stat"
+    },
+    {
+      "datasource": "Prometheus",
+      "fieldConfig": {
+        "defaults": {
+          "unit": "short",
+          "color": { "mode": "thresholds" },
+          "thresholds": { "steps": [{ "color": "green", "value": null }, { "color": "orange", "value": 20 }, { "color": "red", "value": 100 }] }
+        }, "overrides": []
+      },
+      "gridPos": { "h": 5, "w": 6, "x": 6, "y": 16 },
+      "id": 7,
+      "options": { "reduceOptions": { "calcs": ["last"], "values": false }, "colorMode": "background", "orientation": "auto" },
+      "targets": [{ "expr": "federation_outbox_pending{bu=\"bu-b\"}", "legendFormat": "BU-B backlog", "refId": "A" }],
+      "title": "BU-B Pending Backlog",
+      "type": "stat"
+    },
+    {
+      "datasource": "Prometheus",
+      "fieldConfig": {
+        "defaults": {
+          "unit": "short",
+          "color": { "mode": "thresholds" },
+          "thresholds": { "steps": [{ "color": "green", "value": null }, { "color": "red", "value": 1 }] }
+        }, "overrides": []
+      },
+      "gridPos": { "h": 5, "w": 6, "x": 12, "y": 16 },
+      "id": 8,
+      "options": { "reduceOptions": { "calcs": ["last"], "values": false }, "colorMode": "background", "orientation": "auto" },
+      "targets": [{ "expr": "federation_outbox_deadletter{bu=\"bu-a\"}", "legendFormat": "BU-A dead-letter", "refId": "A" }],
+      "title": "BU-A Dead Letters",
+      "type": "stat"
+    },
+    {
+      "datasource": "Prometheus",
+      "fieldConfig": {
+        "defaults": {
+          "unit": "short",
+          "color": { "mode": "thresholds" },
+          "thresholds": { "steps": [{ "color": "green", "value": null }, { "color": "red", "value": 1 }] }
+        }, "overrides": []
+      },
+      "gridPos": { "h": 5, "w": 6, "x": 18, "y": 16 },
+      "id": 9,
+      "options": { "reduceOptions": { "calcs": ["last"], "values": false }, "colorMode": "background", "orientation": "auto" },
+      "targets": [{ "expr": "federation_outbox_deadletter{bu=\"bu-b\"}", "legendFormat": "BU-B dead-letter", "refId": "A" }],
+      "title": "BU-B Dead Letters",
+      "type": "stat"
+    },
+    {
+      "collapsed": false,
+      "gridPos": { "h": 1, "w": 24, "x": 0, "y": 21 },
+      "id": 103,
+      "title": "▶ Endpoint Availability per BU",
+      "type": "row"
+    },
+    {
+      "datasource": "Prometheus",
+      "fieldConfig": {
+        "defaults": {
+          "color": { "mode": "thresholds" },
+          "thresholds": { "steps": [{ "color": "red", "value": null }, { "color": "green", "value": 1 }] },
+          "mappings": [{ "type": "value", "options": { "0": { "text": "DOWN" }, "1": { "text": "UP" } } }]
+        }, "overrides": []
+      },
+      "gridPos": { "h": 5, "w": 6, "x": 0, "y": 22 },
+      "id": 10,
+      "options": { "reduceOptions": { "calcs": ["last"], "values": false }, "colorMode": "background", "orientation": "auto" },
+      "targets": [{ "expr": "probe_success{job=\"blackbox-probes\",instance=~\".*5001.*\"}", "legendFormat": "BU-A Storefront", "refId": "A" }],
+      "title": "BU-A Storefront",
+      "type": "stat"
+    },
+    {
+      "datasource": "Prometheus",
+      "fieldConfig": {
+        "defaults": {
+          "color": { "mode": "thresholds" },
+          "thresholds": { "steps": [{ "color": "red", "value": null }, { "color": "green", "value": 1 }] },
+          "mappings": [{ "type": "value", "options": { "0": { "text": "DOWN" }, "1": { "text": "UP" } } }]
+        }, "overrides": []
+      },
+      "gridPos": { "h": 5, "w": 6, "x": 6, "y": 22 },
+      "id": 11,
+      "options": { "reduceOptions": { "calcs": ["last"], "values": false }, "colorMode": "background", "orientation": "auto" },
+      "targets": [{ "expr": "probe_success{job=\"blackbox-probes\",instance=~\".*5002.*\"}", "legendFormat": "BU-B Storefront", "refId": "A" }],
+      "title": "BU-B Storefront",
+      "type": "stat"
+    },
+    {
+      "datasource": "Prometheus",
+      "fieldConfig": {
+        "defaults": {
+          "color": { "mode": "thresholds" },
+          "thresholds": { "steps": [{ "color": "red", "value": null }, { "color": "green", "value": 1 }] },
+          "mappings": [{ "type": "value", "options": { "0": { "text": "DOWN" }, "1": { "text": "UP" } } }]
+        }, "overrides": []
+      },
+      "gridPos": { "h": 5, "w": 6, "x": 12, "y": 22 },
+      "id": 12,
+      "options": { "reduceOptions": { "calcs": ["last"], "values": false }, "colorMode": "background", "orientation": "auto" },
+      "targets": [{ "expr": "probe_success{job=\"blackbox-probes\",instance=~\".*5010.*\"}", "legendFormat": "Discovery API", "refId": "A" }],
+      "title": "Discovery API",
+      "type": "stat"
+    },
+    {
+      "datasource": "Prometheus",
+      "fieldConfig": {
+        "defaults": {
+          "color": { "mode": "thresholds" },
+          "thresholds": { "steps": [{ "color": "red", "value": null }, { "color": "green", "value": 1 }] },
+          "mappings": [{ "type": "value", "options": { "0": { "text": "DOWN" }, "1": { "text": "UP" } } }]
+        }, "overrides": []
+      },
+      "gridPos": { "h": 5, "w": 6, "x": 18, "y": 22 },
+      "id": 13,
+      "options": { "reduceOptions": { "calcs": ["last"], "values": false }, "colorMode": "background", "orientation": "auto" },
+      "targets": [{ "expr": "probe_success{job=\"blackbox-probes\",instance=~\".*5011.*\"}", "legendFormat": "Discovery Web", "refId": "A" }],
+      "title": "Discovery Web",
+      "type": "stat"
+    },
+    {
+      "collapsed": false,
+      "gridPos": { "h": 1, "w": 24, "x": 0, "y": 27 },
+      "id": 104,
+      "title": "▶ Event Type Breakdown per BU",
+      "type": "row"
+    },
+    {
+      "datasource": "Prometheus",
+      "description": "What kinds of events is BU-A generating? A catalog-heavy BU will show mostly product.* events.",
+      "fieldConfig": {
+        "defaults": { "unit": "short", "color": { "mode": "palette-classic" },
+          "custom": { "fillOpacity": 70 }
+        }, "overrides": []
+      },
+      "gridPos": { "h": 8, "w": 12, "x": 0, "y": 28 },
+      "id": 14,
+      "options": {
+        "orientation": "horizontal",
+        "reduceOptions": { "calcs": ["last"], "values": false },
+        "displayMode": "gradient",
+        "showUnfilled": true
+      },
+      "targets": [{ "expr": "sum by (event_type) (federation_outbox_events_total{bu=\"bu-a\"})", "legendFormat": "{{event_type}}", "refId": "A" }],
+      "title": "BU-A — Event Type Distribution",
+      "type": "bargauge"
+    },
+    {
+      "datasource": "Prometheus",
+      "description": "What kinds of events is BU-B generating?",
+      "fieldConfig": {
+        "defaults": { "unit": "short", "color": { "mode": "palette-classic" },
+          "custom": { "fillOpacity": 70 }
+        }, "overrides": []
+      },
+      "gridPos": { "h": 8, "w": 12, "x": 12, "y": 28 },
+      "id": 15,
+      "options": {
+        "orientation": "horizontal",
+        "reduceOptions": { "calcs": ["last"], "values": false },
+        "displayMode": "gradient",
+        "showUnfilled": true
+      },
+      "targets": [{ "expr": "sum by (event_type) (federation_outbox_events_total{bu=\"bu-b\"})", "legendFormat": "{{event_type}}", "refId": "A" }],
+      "title": "BU-B — Event Type Distribution",
+      "type": "bargauge"
+    }
+  ],
+  "refresh": "10s",
+  "schemaVersion": 30,
+  "tags": ["federation", "business", "comparison"],
+  "templating": { "list": [] },
+  "time": { "from": "now-6h", "to": "now" },
+  "timezone": "browser",
+  "title": "Federation BU-A vs BU-B Comparison",
+  "version": 1
+}
+

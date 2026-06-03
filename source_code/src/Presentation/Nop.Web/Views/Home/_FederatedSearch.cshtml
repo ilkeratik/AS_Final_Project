@@ -1,0 +1,30 @@
+@using Microsoft.Extensions.Configuration
+@using Nop.Core
+@inject IConfiguration Configuration
+@inject IStoreContext StoreContext
+
+@{
+    var store = await StoreContext.GetCurrentStoreAsync();
+    var storeId = store.Id;
+    var apiBase = Configuration["FederatedSearch:ApiBase"] ?? string.Empty;
+
+    // Determine theme based on store
+    var theme = storeId == 1 ? "bu-a" : "bu-b";
+    var storeFilter = storeId == 1 ? "bu-a" : "bu-b";
+}
+
+<link rel="stylesheet" href="/lib/federated-search/federated-search.css" />
+<script type="module" src="/lib/federated-search/federated-search.js"></script>
+
+<div class="page federated-search-section">
+    <div class="page-body">
+        <div id="federated-search-widget"
+             data-federated-search
+             data-api-base="@apiBase"
+             data-theme="@theme"
+             data-store-filter="@storeFilter"
+             data-show-filter="true">
+        </div>
+    </div>
+</div>
+

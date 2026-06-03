@@ -1,0 +1,56 @@
+global:
+  scrape_interval: 15s
+  evaluation_interval: 15s
+
+scrape_configs:
+  - job_name: 'prometheus'
+    static_configs:
+      - targets: ['localhost:9090']
+
+  # Use Blackbox exporter to probe HTTP endpoints on the host (macOS: host.docker.internal)
+  - job_name: 'blackbox-probes'
+    metrics_path: /probe
+    params:
+      module: [http_2xx]
+    static_configs:
+      - targets:
+        - http://host.docker.internal:5010/health  # Discovery API health
+        - http://host.docker.internal:5011/        # Discovery Web
+        - http://host.docker.internal:5001/        # BU-A storefront
+        - http://host.docker.internal:5002/        # BU-B storefront
+        - http://host.docker.internal:7700/health  # Meilisearch health
+        - http://host.docker.internal:8080/health/ready  # Keycloak SSO
+    relabel_configs:
+      - source_labels: [__address__]
+        target_label: __param_target
+      - source_labels: [__param_target]
+        target_label: instance
+      - target_label: __address__
+        replacement: blackbox:9115  # blackbox exporter address
+
+  # Meilisearch native Prometheus metrics (meilisearch_index_docs_count, request rates…)
+  - job_name: 'meilisearch'
+    metrics_path: /metrics
+    static_configs:
+      - targets: ['host.docker.internal:7700']
+
+  # Keycloak native Prometheus metrics — requires KC_METRICS_ENABLED=true and KC_HTTP_MANAGEMENT_PORT=9000
+  - job_name: 'keycloak'
+    metrics_path: /metrics
+    static_configs:
+      - targets: ['host.docker.internal:9000']
+        labels:
+          service: 'keycloak'
+
+  # Transactional-outbox metrics via postgres_exporter (one per BU, labelled by 'bu')
+  - job_name: 'outbox-bua'
+    static_configs:
+      - targets: ['postgres-exporter-bua:9187']
+        labels:
+          bu: 'bu-a'
+  - job_name: 'outbox-bub'
+    static_configs:
+      - targets: ['postgres-exporter-bub:9187']
+        labels:
+          bu: 'bu-b'
+

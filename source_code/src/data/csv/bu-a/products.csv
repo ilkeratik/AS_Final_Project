@@ -1,0 +1,4 @@
+Sku,Name,ShortDescription,FullDescription,Price,OldPrice,Cost,StockQuantity,Published,VisibleIndividually
+NSL-SOFA-001,Northstar Cloud Sofa,Soft modular sofa,Cloud-style modular sofa with washable covers,1299.00,1499.00,650.00,25,True,True
+NSL-BED-002,Northstar Ridge Bed,Minimalist platform bed,Oak platform bed with hidden storage,899.00,999.00,420.00,18,True,True
+PAH-FIRE-003,Pine Hearth Ember Console,Media console with fireplace,Media console with electric fireplace insert,1199.00,1299.00,540.00,12,True,True

@@ -1,0 +1,703 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Federation Discovery Portal</title>
+  <style>
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+    :root {
+      --bg:        #f0f4f8;
+      --surface:   #ffffff;
+      --border:    #e2e8f0;
+      --text:      #0f172a;
+      --muted:     #64748b;
+      --accent:    #4f46e5;
+      --accent-h:  #4338ca;
+      --bua:       #2563eb;
+      --bub:       #16a34a;
+      --danger:    #dc2626;
+      --shadow:    0 1px 3px rgba(0,0,0,.08), 0 1px 2px rgba(0,0,0,.06);
+      --shadow-lg: 0 4px 16px rgba(0,0,0,.10);
+      --radius:    10px;
+    }
+
+    body {
+      font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
+      background: var(--bg);
+      color: var(--text);
+      min-height: 100vh;
+    }
+
+    /* ── Header / Hero ──────────────────────────────────────────────────────── */
+    header {
+      background: linear-gradient(135deg, #1e1b4b 0%, #312e81 50%, #4338ca 100%);
+      color: #fff;
+      padding: 2.5rem 1.5rem 2rem;
+      text-align: center;
+    }
+    header h1 {
+      font-size: clamp(1.6rem, 4vw, 2.4rem);
+      font-weight: 800;
+      letter-spacing: -0.02em;
+      margin-bottom: .4rem;
+    }
+    header p {
+      font-size: .95rem;
+      opacity: .75;
+      margin-bottom: 1.5rem;
+    }
+
+    /* ── Search bar ──────────────────────────────────────────────────────────── */
+    .search-wrap {
+      max-width: 640px;
+      margin: 0 auto;
+      position: relative;
+    }
+    .search-wrap input[type="search"] {
+      width: 100%;
+      padding: .85rem 3.2rem .85rem 1.1rem;
+      border: none;
+      border-radius: 50px;
+      font-size: 1rem;
+      box-shadow: var(--shadow-lg);
+      outline: none;
+      color: var(--text);
+      background: #fff;
+    }
+    .search-wrap input[type="search"]:focus {
+      box-shadow: 0 0 0 3px rgba(99,102,241,.35), var(--shadow-lg);
+    }
+    .search-wrap .icon {
+      position: absolute;
+      right: 1rem;
+      top: 50%;
+      transform: translateY(-50%);
+      color: var(--muted);
+      pointer-events: none;
+      font-size: 1.1rem;
+    }
+
+    /* ── Filters ─────────────────────────────────────────────────────────────── */
+    .filters {
+      background: var(--surface);
+      border-bottom: 1px solid var(--border);
+      padding: .75rem 1.5rem;
+      display: flex;
+      gap: .5rem;
+      flex-wrap: wrap;
+      justify-content: center;
+    }
+    .filter-btn {
+      padding: .35rem .9rem;
+      border-radius: 50px;
+      border: 1.5px solid var(--border);
+      background: var(--surface);
+      color: var(--muted);
+      font-size: .82rem;
+      font-weight: 500;
+      cursor: pointer;
+      transition: all .15s;
+      white-space: nowrap;
+    }
+    .filter-btn:hover { border-color: var(--accent); color: var(--accent); }
+    .filter-btn.active {
+      background: var(--accent);
+      border-color: var(--accent);
+      color: #fff;
+    }
+    .filter-btn.bua.active  { background: var(--bua); border-color: var(--bua); }
+    .filter-btn.bub.active  { background: var(--bub); border-color: var(--bub); }
+
+    /* ── Main layout ─────────────────────────────────────────────────────────── */
+    main {
+      max-width: 1280px;
+      margin: 0 auto;
+      padding: 2rem 1.5rem;
+    }
+
+    /* ── Meta bar ─────────────────────────────────────────────────────────────── */
+    .meta-bar {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      margin-bottom: 1.25rem;
+      flex-wrap: wrap;
+      gap: .5rem;
+    }
+    .meta-bar .count { font-size: .9rem; color: var(--muted); }
+    .sort-select {
+      padding: .3rem .7rem;
+      border: 1.5px solid var(--border);
+      border-radius: var(--radius);
+      font-size: .85rem;
+      color: var(--text);
+      background: var(--surface);
+      cursor: pointer;
+    }
+
+    /* ── Product grid ────────────────────────────────────────────────────────── */
+    .grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fill, minmax(220px, 1fr));
+      gap: 1.25rem;
+    }
+
+    .card {
+      background: var(--surface);
+      border: 1px solid var(--border);
+      border-radius: var(--radius);
+      overflow: hidden;
+      box-shadow: var(--shadow);
+      display: flex;
+      flex-direction: column;
+      transition: transform .15s, box-shadow .15s;
+    }
+    .card:hover {
+      transform: translateY(-2px);
+      box-shadow: var(--shadow-lg);
+    }
+
+    .card-img {
+      aspect-ratio: 4/3;
+      overflow: hidden;
+      background: #f1f5f9;
+    }
+    .card-img img {
+      width: 100%;
+      height: 100%;
+      object-fit: cover;
+      transition: transform .2s;
+    }
+    .card:hover .card-img img { transform: scale(1.04); }
+    .card-img .placeholder {
+      width: 100%;
+      height: 100%;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 2.5rem;
+      color: #cbd5e1;
+    }
+
+    .card-body {
+      padding: .85rem;
+      flex: 1;
+      display: flex;
+      flex-direction: column;
+      gap: .4rem;
+    }
+
+    .store-badge {
+      display: inline-block;
+      padding: .18rem .55rem;
+      border-radius: 50px;
+      font-size: .7rem;
+      font-weight: 700;
+      letter-spacing: .04em;
+      text-transform: uppercase;
+      color: #fff;
+      background: var(--muted);
+      width: fit-content;
+    }
+    .store-badge.bu-a { background: var(--bua); }
+    .store-badge.bu-b { background: var(--bub); }
+
+    .card-title {
+      font-size: .9rem;
+      font-weight: 600;
+      line-height: 1.3;
+      display: -webkit-box;
+      -webkit-line-clamp: 2;
+      -webkit-box-orient: vertical;
+      overflow: hidden;
+    }
+
+    .card-desc {
+      font-size: .78rem;
+      color: var(--muted);
+      line-height: 1.4;
+      display: -webkit-box;
+      -webkit-line-clamp: 2;
+      -webkit-box-orient: vertical;
+      overflow: hidden;
+      flex: 1;
+    }
+
+    .card-cats {
+      display: flex;
+      flex-wrap: wrap;
+      gap: .3rem;
+    }
+    .cat-tag {
+      font-size: .68rem;
+      padding: .1rem .45rem;
+      border-radius: 4px;
+      background: #e0e7ff;
+      color: #3730a3;
+      font-weight: 500;
+    }
+
+    .card-footer {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      margin-top: .3rem;
+    }
+    .price {
+      font-size: 1rem;
+      font-weight: 700;
+      color: var(--text);
+    }
+    .btn-view {
+      padding: .3rem .7rem;
+      border-radius: 6px;
+      background: var(--accent);
+      color: #fff;
+      font-size: .75rem;
+      font-weight: 600;
+      text-decoration: none;
+      transition: background .15s;
+      white-space: nowrap;
+    }
+    .btn-view:hover { background: var(--accent-h); }
+    .btn-view.disabled {
+      background: var(--border);
+      color: var(--muted);
+      cursor: default;
+      pointer-events: none;
+    }
+
+    /* ── States ──────────────────────────────────────────────────────────────── */
+    .state-box {
+      text-align: center;
+      padding: 4rem 1rem;
+      color: var(--muted);
+    }
+    .state-box .emoji { font-size: 3rem; margin-bottom: .75rem; }
+    .state-box h3 { font-size: 1.05rem; font-weight: 600; color: var(--text); margin-bottom: .4rem; }
+    .state-box p  { font-size: .88rem; }
+
+    /* ── Spinner ─────────────────────────────────────────────────────────────── */
+    .spinner-wrap {
+      display: flex;
+      justify-content: center;
+      padding: 3rem 0;
+    }
+    .spinner {
+      width: 36px;
+      height: 36px;
+      border: 3.5px solid var(--border);
+      border-top-color: var(--accent);
+      border-radius: 50%;
+      animation: spin .65s linear infinite;
+    }
+    @keyframes spin { to { transform: rotate(360deg); } }
+
+    /* ── Pagination ──────────────────────────────────────────────────────────── */
+    .pagination {
+      display: flex;
+      justify-content: center;
+      align-items: center;
+      gap: .75rem;
+      margin-top: 2.5rem;
+    }
+    .page-btn {
+      padding: .45rem 1.1rem;
+      border: 1.5px solid var(--border);
+      border-radius: var(--radius);
+      background: var(--surface);
+      color: var(--text);
+      font-size: .85rem;
+      font-weight: 500;
+      cursor: pointer;
+      transition: all .15s;
+    }
+    .page-btn:hover:not(:disabled) {
+      border-color: var(--accent);
+      color: var(--accent);
+    }
+    .page-btn:disabled { opacity: .4; cursor: not-allowed; }
+    .page-info { font-size: .85rem; color: var(--muted); }
+
+    /* ── Footer ──────────────────────────────────────────────────────────────── */
+    footer {
+      text-align: center;
+      padding: 2rem 1rem;
+      font-size: .78rem;
+      color: var(--muted);
+      border-top: 1px solid var(--border);
+      margin-top: 3rem;
+    }
+    footer a { color: var(--accent); text-decoration: none; }
+  </style>
+</head>
+<body>
+
+<header>
+  <h1>🛍 Federation Discovery</h1>
+  <p>Search products across all our stores in one place</p>
+  <div class="search-wrap">
+    <input id="searchInput" type="search" placeholder="Search products, categories…" autocomplete="off" />
+    <span class="icon">🔍</span>
+  </div>
+</header>
+
+<div class="filters" id="filterBar">
+  <button class="filter-btn active" data-store="">All Stores</button>
+  <!-- store buttons injected by JS -->
+</div>
+
+<main>
+  <div class="meta-bar" id="metaBar" style="display:none">
+    <span class="count" id="countLabel"></span>
+    <select class="sort-select" id="sortSelect">
+      <option value="">Relevance</option>
+      <option value="price:asc">Price ↑</option>
+      <option value="price:desc">Price ↓</option>
+      <option value="publishedAt:desc">Newest</option>
+    </select>
+  </div>
+
+  <div id="results"></div>
+  <nav class="pagination" id="pagination" style="display:none">
+    <button class="page-btn" id="prevBtn" disabled>← Prev</button>
+    <span class="page-info" id="pageInfo"></span>
+    <button class="page-btn" id="nextBtn">Next →</button>
+  </nav>
+</main>
+
+<footer>
+  Powered by <a href="/openapi" target="_blank">Discovery API</a> &amp; Meilisearch ·
+  <a href="/health">Health</a>
+</footer>
+
+<script>
+  const PAGE_SIZE = 20;
+  const PLACEHOLDER = '📦';
+
+  // ── State ──────────────────────────────────────────────────────────────────
+  const state = {
+    q:        '',
+    store:    '',
+    page:     0,
+    sort:     '',
+    total:    0,
+    stores:   {},   // { "bu-a": "HomeStyle Living", ... }
+  };
+
+  // Default store URLs mapping for dynamically building URLs with slug
+  const STORE_URLS = {
+      'bu-a': 'http://localhost:5001',
+      'bu-b': 'http://localhost:5002'
+  };
+
+  // Default store Names mapping for instant display
+  const STORE_NAMES = {
+      'bu-a': 'HomeStyle Living',
+      'bu-b': 'WorkForge Industrial'
+  };
+
+  // ── DOM refs ───────────────────────────────────────────────────────────────
+  const searchInput = document.getElementById('searchInput');
+  const filterBar   = document.getElementById('filterBar');
+  const resultsEl   = document.getElementById('results');
+  const metaBar     = document.getElementById('metaBar');
+  const countLabel  = document.getElementById('countLabel');
+  const sortSelect  = document.getElementById('sortSelect');
+  const pagination  = document.getElementById('pagination');
+  const prevBtn     = document.getElementById('prevBtn');
+  const nextBtn     = document.getElementById('nextBtn');
+  const pageInfo    = document.getElementById('pageInfo');
+
+  // ── Debounce ───────────────────────────────────────────────────────────────
+  let debounceTimer;
+  function debounce(fn, ms) {
+    clearTimeout(debounceTimer);
+    debounceTimer = setTimeout(fn, ms);
+  }
+
+  // ── Store colour class ─────────────────────────────────────────────────────
+  function storeCls(code) {
+    if (!code) return '';
+    return code.toLowerCase().replace(/[^a-z0-9]/g, '-');
+  }
+
+  // ── Currency format ────────────────────────────────────────────────────────
+  function fmt(n) {
+    return '$' + Number(n).toFixed(2).replace(/\B(?=(\d{3})+(?!\d))/g, ',');
+  }
+
+  function isNumericProductRoute(url) {
+    if (!url) return false;
+
+    const path = String(url).trim().replace(/^https?:\/\/[^/]+/i, '');
+    return /^\/?product\/\d+(?:[/?#].*)?$/i.test(path);
+  }
+
+  function buildStoreLink(baseUrl, path) {
+    const normalizedPath = String(path || '').trim().replace(/^\/+/, '');
+    if (!normalizedPath) return '';
+    return baseUrl
+      ? `${baseUrl.replace(/\/+$/, '')}/${normalizedPath}`
+      : `/${normalizedPath}`;
+  }
+
+  // ── Facets → build store filter buttons ────────────────────────────────────
+  async function loadFacets(q) {
+    try {
+      const url = q ? `/api/facets?q=${encodeURIComponent(q)}` : '/api/facets';
+      const r   = await fetch(url);
+      if (!r.ok) return;
+      const data = await r.json();
+
+      const storeMap = data.stores || {};
+      buildFilterButtons(storeMap);
+    } catch (_) {}
+  }
+
+  function buildFilterButtons(storeMap) {
+    // Remove all store buttons except "All"
+    [...filterBar.querySelectorAll('[data-store]:not([data-store=""])')].forEach(b => b.remove());
+
+    for (const [code, info] of Object.entries(storeMap).sort()) {
+      // Prioritize the name returned from API, fallback to our hardcoded default, fallback to code
+      let name = code;
+      let count = 0;
+      
+      // Handle new API format (object with count/name) or old format (just count)
+      if (typeof info === 'object') {
+        name = info.name && info.name !== code ? info.name : (STORE_NAMES[code] || code);
+        count = info.count || 0;
+      } else {
+        name = STORE_NAMES[code] || code;
+        count = info;
+      }
+      
+      state.stores[code] = name; // cache it
+      
+      const btn   = document.createElement('button');
+      btn.className = `filter-btn ${storeCls(code)}`;
+      btn.dataset.store = code;
+      btn.textContent   = `${name} (${count})`;
+      if (state.store === code) btn.classList.add('active');
+      btn.addEventListener('click', () => selectStore(code));
+      filterBar.appendChild(btn);
+    }
+  }
+
+  function selectStore(code) {
+    state.store = code;
+    state.page  = 0;
+    filterBar.querySelectorAll('.filter-btn').forEach(b => {
+      b.classList.toggle('active', b.dataset.store === code);
+    });
+    if (state.q) search();
+  }
+
+  // ── Render ─────────────────────────────────────────────────────────────────
+  function renderSkeleton() {
+    resultsEl.innerHTML = '<div class="spinner-wrap"><div class="spinner"></div></div>';
+    metaBar.style.display  = 'none';
+    pagination.style.display = 'none';
+  }
+
+  function renderEmpty(q) {
+    resultsEl.innerHTML = `
+      <div class="state-box">
+        <div class="emoji">🔍</div>
+        <h3>No results for "${q}"</h3>
+        <p>Try a different search term or clear the store filter.</p>
+      </div>`;
+    metaBar.style.display   = 'none';
+    pagination.style.display = 'none';
+  }
+
+  function renderPrompt() {
+    resultsEl.innerHTML = `
+      <div class="state-box">
+        <div class="emoji">🛍</div>
+        <h3>Find products across all stores</h3>
+        <p>Type a product name, category, or keyword above to get started.</p>
+      </div>`;
+    metaBar.style.display   = 'none';
+    pagination.style.display = 'none';
+  }
+
+  function renderError() {
+    resultsEl.innerHTML = `
+      <div class="state-box">
+        <div class="emoji">⚠️</div>
+        <h3>Something went wrong</h3>
+        <p>Could not reach the discovery service. Please try again.</p>
+      </div>`;
+    metaBar.style.display   = 'none';
+    pagination.style.display = 'none';
+  }
+
+  function renderResults(data) {
+    const { hits, totalHits, page, pageSize } = data;
+
+    // Collect store names from first page hits
+    hits.forEach(h => { if (h.storeCode && h.storeName) state.stores[h.storeCode] = h.storeName; });
+
+    // Meta bar
+    metaBar.style.display = 'flex';
+    countLabel.textContent = totalHits === 1 ? '1 result' : `${totalHits.toLocaleString()} results`;
+
+    // Grid
+    const grid = document.createElement('div');
+    grid.className = 'grid';
+    hits.forEach(h => grid.appendChild(buildCard(h)));
+    resultsEl.innerHTML = '';
+    resultsEl.appendChild(grid);
+
+    // Pagination
+    const totalPages = Math.ceil(totalHits / pageSize);
+    if (totalPages > 1) {
+      pagination.style.display = 'flex';
+      prevBtn.disabled = page === 0;
+      nextBtn.disabled = page >= totalPages - 1;
+      pageInfo.textContent = `Page ${page + 1} of ${totalPages}`;
+    } else {
+      pagination.style.display = 'none';
+    }
+  }
+
+  function buildCard(h) {
+    const card = document.createElement('div');
+    card.className = 'card';
+
+    const imgHtml = h.thumbnailUrl
+      ? `<img src="${esc(h.thumbnailUrl)}" alt="${esc(h.productName)}" loading="lazy"
+              onerror="this.parentElement.innerHTML='<div class=\\'placeholder\\'>${PLACEHOLDER}</div>'">`
+      : `<div class="placeholder">${PLACEHOLDER}</div>`;
+
+    const catHtml = (h.categories || []).slice(0, 3)
+      .map(c => `<span class="cat-tag">${esc(c)}</span>`).join('');
+
+    // Prefer the canonical slug coming from nopCommerce when the indexed URL
+    // is a numeric /product/{id} route; otherwise normalize the productUrl.
+    let link = h.productUrl;
+    const baseUrl = STORE_URLS[h.storeCode];
+    const slugUrl = h.slug ? buildStoreLink(baseUrl, h.slug) : '';
+
+    if (link) {
+      const trimmed = link.trim();
+
+      if (isNumericProductRoute(trimmed) && slugUrl) {
+        link = slugUrl;
+      } else if (/^https?:\/\//i.test(trimmed)) {
+        link = trimmed;
+      } else if (baseUrl) {
+        link = `${baseUrl.replace(/\/+$/, '')}/${trimmed.replace(/^\/+/, '')}`;
+      } else {
+        link = `/${trimmed.replace(/^\/+/, '')}`;
+      }
+    } else if (slugUrl) {
+      link = slugUrl;
+    }
+
+    const viewHtml = link
+      ? `<a class="btn-view" href="${esc(link)}" target="_blank" rel="noopener">View ↗</a>`
+      : `<span class="btn-view disabled">No link</span>`;
+
+    const displayName = h.storeName || STORE_NAMES[h.storeCode] || h.storeCode;
+
+    card.innerHTML = `
+      <div class="card-img">${imgHtml}</div>
+      <div class="card-body">
+        <span class="store-badge ${storeCls(h.storeCode)}">${esc(displayName)}</span>
+        <h3 class="card-title">${esc(h.productName)}</h3>
+        ${h.shortDescription ? `<p class="card-desc">${esc(h.shortDescription)}</p>` : ''}
+        ${catHtml ? `<div class="card-cats">${catHtml}</div>` : ''}
+        <div class="card-footer">
+          <span class="price">${fmt(h.price)}</span>
+          ${viewHtml}
+        </div>
+      </div>`;
+    return card;
+  }
+
+  function esc(s) {
+    if (s == null) return '';
+    return String(s)
+      .replace(/&/g, '&amp;')
+      .replace(/</g, '&lt;')
+      .replace(/>/g, '&gt;')
+      .replace(/"/g, '&quot;')
+      .replace(/'/g, '&#39;');
+  }
+
+  // ── Search ─────────────────────────────────────────────────────────────────
+  async function search() {
+    const q = state.q.trim();
+    if (!q) { renderPrompt(); return; }
+
+    renderSkeleton();
+
+    try {
+      const params = new URLSearchParams({ q, page: state.page, pageSize: PAGE_SIZE });
+      if (state.store) params.set('stores', state.store);
+
+      const [searchRes] = await Promise.all([
+        fetch(`/api/search?${params}`),
+        loadFacets(q)
+      ]);
+
+      if (!searchRes.ok) { renderError(); return; }
+      const data = await searchRes.json();
+
+      if (!data.hits || data.hits.length === 0) {
+        renderEmpty(q);
+        return;
+      }
+
+      state.total = data.totalHits;
+
+      // Re-render store buttons with resolved names after first page
+      data.hits.forEach(h => { if (h.storeCode && h.storeName) state.stores[h.storeCode] = h.storeName; });
+      // Update button labels
+      filterBar.querySelectorAll('[data-store]:not([data-store=""])').forEach(b => {
+        const name = state.stores[b.dataset.store];
+        if (name) b.textContent = b.textContent.replace(/^[^(]+/, name + ' ');
+      });
+
+      renderResults(data);
+    } catch (_) {
+      renderError();
+    }
+  }
+
+  // ── Event listeners ────────────────────────────────────────────────────────
+  searchInput.addEventListener('input', e => {
+    state.q    = e.target.value;
+    state.page = 0;
+    debounce(search, 320);
+  });
+
+  searchInput.addEventListener('keydown', e => {
+    if (e.key === 'Enter') { clearTimeout(debounceTimer); search(); }
+  });
+
+  sortSelect.addEventListener('change', e => {
+    state.sort = e.target.value;
+    state.page = 0;
+    search();
+  });
+
+  prevBtn.addEventListener('click', () => { state.page--; search(); window.scrollTo(0,0); });
+  nextBtn.addEventListener('click', () => { state.page++; search(); window.scrollTo(0,0); });
+
+  filterBar.addEventListener('click', e => {
+    const btn = e.target.closest('.filter-btn');
+    if (btn && btn.dataset.store === '') selectStore('');
+  });
+
+  // ── Init ───────────────────────────────────────────────────────────────────
+  renderPrompt();
+  loadFacets('');
+</script>
+</body>
+</html>

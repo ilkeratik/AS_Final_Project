@@ -1,0 +1,65 @@
+{
+  "annotations": { "list": [] },
+  "editable": true,
+  "gnetId": null,
+  "id": null,
+  "links": [],
+  "panels": [
+    {
+      "datasource": "Prometheus",
+      "fieldConfig": {"defaults": {"color":{"mode":"thresholds"},"thresholds":{"steps":[{"color":"red","value":null},{"color":"green","value":1}]},"mappings":[{"type":"value","options":{"0":{"text":"DOWN"},"1":{"text":"UP"}}}]}, "overrides": []},
+      "gridPos": {"h": 6, "w": 24, "x": 0, "y": 0},
+      "id": 1,
+      "options": {"reduceOptions": {"calcs": ["last"]}, "orientation":"horizontal", "colorMode":"background"},
+      "targets": [
+        { "expr": "probe_success{job=\"blackbox-probes\"}", "legendFormat": "{{instance}}", "refId": "A" }
+      ],
+      "title": "Service availability (UP/DOWN)",
+      "type": "stat"
+    },
+    {
+      "datasource": "Prometheus",
+      "fieldConfig": {"defaults": {"unit":"short","color":{"mode":"palette-classic"}}, "overrides": []},
+      "gridPos": {"h": 7, "w": 8, "x": 0, "y": 6},
+      "id": 2,
+      "options": {"legend":{"displayMode":"table","placement":"bottom","calcs":["last"]}},
+      "targets": [
+        { "expr": "federation_outbox_pending", "legendFormat": "{{bu}} pending", "refId": "A" }
+      ],
+      "title": "Outbox pending (per BU)",
+      "type": "timeseries"
+    },
+    {
+      "datasource": "Prometheus",
+      "fieldConfig": {"defaults": {"unit":"short","color":{"mode":"thresholds"},"thresholds":{"steps":[{"color":"red","value":null},{"color":"green","value":1}]}}, "overrides": []},
+      "gridPos": {"h": 7, "w": 8, "x": 8, "y": 6},
+      "id": 3,
+      "options": {"reduceOptions": {"calcs": ["last"]}},
+      "targets": [
+        { "expr": "sum(meilisearch_index_docs_count)", "refId": "A" }
+      ],
+      "title": "Documents discoverable (Meilisearch)",
+      "type": "stat"
+    },
+    {
+      "datasource": "Prometheus",
+      "fieldConfig": {"defaults": {"unit":"s","color":{"mode":"palette-classic"}}, "overrides": []},
+      "gridPos": {"h": 7, "w": 8, "x": 16, "y": 6},
+      "id": 4,
+      "options": {"legend":{"displayMode":"table","placement":"bottom","calcs":["last"]}},
+      "targets": [
+        { "expr": "probe_duration_seconds{job=\"blackbox-probes\"}", "legendFormat": "{{instance}}", "refId": "A" }
+      ],
+      "title": "Endpoint latency (s)",
+      "type": "timeseries"
+    }
+  ],
+  "schemaVersion": 30,
+  "tags": ["federation","ops","summary"],
+  "templating": {"list": []},
+  "time": {"from": "now-30m", "to": "now"},
+  "refresh": "5s",
+  "timezone": "browser",
+  "title": "Federation Operations Summary",
+  "version": 2
+}

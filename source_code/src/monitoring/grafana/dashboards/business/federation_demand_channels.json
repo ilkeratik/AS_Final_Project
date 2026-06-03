@@ -1,0 +1,155 @@
+{
+  "annotations": { "list": [] },
+  "editable": true,
+  "id": null,
+  "links": [],
+  "panels": [
+    {
+      "datasource": "Prometheus",
+      "fieldConfig": { "defaults": { "unit": "short", "color": { "mode": "palette-classic" } }, "overrides": [] },
+      "gridPos": { "h": 8, "w": 12, "x": 0, "y": 0 },
+      "id": 1,
+      "options": { "legend": { "displayMode": "table", "placement": "bottom", "calcs": ["last"] } },
+      "targets": [
+        { "expr": "sum by (instance) (count_over_time(probe_success{job=\"blackbox-probes\",instance=~\".*(5001|5002|5010|5011).*\"}[5m]))", "legendFormat": "{{instance}}", "refId": "A" }
+      ],
+      "title": "Endpoint Checks (5m) - BU and Shared Discovery",
+      "type": "timeseries"
+    },
+    {
+      "datasource": "Prometheus",
+      "fieldConfig": { "defaults": { "unit": "reqps", "color": { "mode": "palette-classic" } }, "overrides": [] },
+      "gridPos": { "h": 8, "w": 12, "x": 12, "y": 0 },
+      "id": 2,
+      "options": { "legend": { "displayMode": "table", "placement": "bottom", "calcs": ["last"] } },
+      "targets": [
+        { "expr": "sum by (path) (rate(meilisearch_http_requests_total{path=~\".*search.*\"}[5m]))", "legendFormat": "{{path}}", "refId": "A" }
+      ],
+      "title": "Shared Search Request Rate by Path (req/s)",
+      "type": "timeseries"
+    },
+    {
+      "datasource": "Prometheus",
+      "fieldConfig": { "defaults": { "unit": "short", "color": { "mode": "palette-classic" } }, "overrides": [] },
+      "gridPos": { "h": 7, "w": 8, "x": 0, "y": 8 },
+      "id": 3,
+      "options": { "reduceOptions": { "calcs": ["last"], "values": false }, "orientation": "auto", "colorMode": "value" },
+      "targets": [
+        { "expr": "sum(increase(meilisearch_http_requests_total{path=~\".*search.*\"}[24h]))", "refId": "A" }
+      ],
+      "title": "Shared Search Requests (Last 24h)",
+      "type": "stat"
+    },
+    {
+      "datasource": "Prometheus",
+      "fieldConfig": { "defaults": { "unit": "short", "color": { "mode": "palette-classic" } }, "overrides": [] },
+      "gridPos": { "h": 7, "w": 8, "x": 8, "y": 8 },
+      "id": 4,
+      "options": { "reduceOptions": { "calcs": ["last"], "values": false }, "orientation": "auto", "colorMode": "value" },
+      "targets": [
+        { "expr": "sum(meilisearch_index_docs_count)", "refId": "A" }
+      ],
+      "title": "Indexed Products (Current)",
+      "type": "stat"
+    },
+    {
+      "datasource": "Prometheus",
+      "fieldConfig": { "defaults": { "unit": "s", "color": { "mode": "palette-classic" } }, "overrides": [] },
+      "gridPos": { "h": 7, "w": 8, "x": 16, "y": 8 },
+      "id": 5,
+      "options": { "legend": { "displayMode": "table", "placement": "bottom", "calcs": ["last"] } },
+      "targets": [
+        { "expr": "probe_duration_seconds{job=\"blackbox-probes\",instance=~\".*(5001|5002|5010|5011).*\"}", "legendFormat": "{{instance}}", "refId": "A" }
+      ],
+      "title": "Channel Latency (s)",
+      "type": "timeseries"
+    },
+    {
+      "datasource": "Prometheus",
+      "fieldConfig": {
+        "defaults": { "unit": "short", "color": { "mode": "palette-classic" },
+          "custom": { "fillOpacity": 70 }
+        }, "overrides": []
+      },
+      "gridPos": { "h": 7, "w": 8, "x": 0, "y": 15 },
+      "id": 6,
+      "options": {
+        "orientation": "horizontal",
+        "reduceOptions": { "calcs": ["last"], "values": false },
+        "displayMode": "gradient",
+        "showUnfilled": true
+      },
+      "targets": [
+        { "expr": "federation_catalog_products_published", "legendFormat": "{{bu}} published", "refId": "A" },
+        { "expr": "federation_catalog_products_unpublished", "legendFormat": "{{bu}} unpublished", "refId": "B" }
+      ],
+      "title": "Published vs Unpublished Products per BU",
+      "type": "bargauge"
+    },
+    {
+      "datasource": "Prometheus",
+      "fieldConfig": {
+        "defaults": {
+          "unit": "percent",
+          "color": { "mode": "thresholds" },
+          "thresholds": { "steps": [
+            { "color": "red", "value": null },
+            { "color": "orange", "value": 70 },
+            { "color": "green", "value": 90 }
+          ]}
+        }, "overrides": []
+      },
+      "gridPos": { "h": 7, "w": 8, "x": 8, "y": 15 },
+      "id": 7,
+      "options": { "reduceOptions": { "calcs": ["last"], "values": false }, "orientation": "auto", "colorMode": "background" },
+      "targets": [
+        { "expr": "100 * sum(meilisearch_index_docs_count) / sum(federation_catalog_products_published)", "legendFormat": "Coverage %", "refId": "A" }
+      ],
+      "title": "Search Index Coverage (Indexed / Published %)",
+      "type": "stat"
+    },
+    {
+      "datasource": "Prometheus",
+      "fieldConfig": {
+        "defaults": {
+          "unit": "percent",
+          "color": { "mode": "thresholds" },
+          "thresholds": { "steps": [
+            { "color": "green", "value": null },
+            { "color": "orange", "value": 1 },
+            { "color": "red", "value": 5 }
+          ]}
+        }, "overrides": []
+      },
+      "gridPos": { "h": 7, "w": 8, "x": 16, "y": 15 },
+      "id": 8,
+      "options": { "legend": { "displayMode": "list", "placement": "bottom", "calcs": ["last"] } },
+      "targets": [
+        { "expr": "100 * sum(rate(meilisearch_http_requests_total{status_code=~\"4..|5..\"}[5m])) / sum(rate(meilisearch_http_requests_total[5m]))", "legendFormat": "Error %", "refId": "A" }
+      ],
+      "title": "Meilisearch Error Rate (%)",
+      "type": "timeseries"
+    },
+    {
+      "datasource": "Prometheus",
+      "fieldConfig": { "defaults": { "unit": "short", "color": { "mode": "palette-classic" } }, "overrides": [] },
+      "gridPos": { "h": 7, "w": 24, "x": 0, "y": 22 },
+      "id": 9,
+      "options": { "legend": { "displayMode": "table", "placement": "right", "calcs": ["last", "max"] } },
+      "targets": [
+        { "expr": "meilisearch_index_docs_count", "legendFormat": "{{index}} index", "refId": "A" }
+      ],
+      "title": "Meilisearch Index Size Over Time",
+      "type": "timeseries"
+    }
+  ],
+  "refresh": "10s",
+  "schemaVersion": 30,
+  "tags": ["federation", "business", "demand"],
+  "templating": { "list": [] },
+  "time": { "from": "now-6h", "to": "now" },
+  "timezone": "browser",
+  "title": "Federation Demand Channels",
+  "version": 1
+}
+

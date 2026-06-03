@@ -1,0 +1,155 @@
+{
+  "annotations": { "list": [] },
+  "editable": true,
+  "gnetId": null,
+  "id": null,
+  "links": [],
+  "panels": [
+    {
+      "collapsed": false,
+      "gridPos": { "h": 1, "w": 24, "x": 0, "y": 0 },
+      "id": 100,
+      "title": "▶ Current Latency — all services at a glance",
+      "type": "row"
+    },
+    {
+      "datasource": "Prometheus",
+      "description": "Latest probe duration for every service. The bar length = response time. Red if over 1s.",
+      "fieldConfig": {
+        "defaults": {
+          "unit": "s",
+          "color": { "mode": "thresholds" },
+          "thresholds": { "steps": [{ "color": "green", "value": null }, { "color": "orange", "value": 0.3 }, { "color": "red", "value": 1.0 }] },
+          "custom": { "fillOpacity": 70 }
+        }, "overrides": []
+      },
+      "gridPos": { "h": 7, "w": 24, "x": 0, "y": 1 },
+      "id": 1,
+      "options": {
+        "orientation": "horizontal",
+        "reduceOptions": { "calcs": ["last"], "values": false },
+        "displayMode": "gradient",
+        "showUnfilled": true
+      },
+      "targets": [{ "expr": "probe_duration_seconds{job=\"blackbox-probes\"}", "legendFormat": "{{instance}}", "refId": "A" }],
+      "title": "Latency per Service (current, seconds)",
+      "type": "bargauge"
+    },
+    {
+      "collapsed": false,
+      "gridPos": { "h": 1, "w": 24, "x": 0, "y": 8 },
+      "id": 101,
+      "title": "▶ Latency Trends — BU storefronts vs shared services",
+      "type": "row"
+    },
+    {
+      "datasource": "Prometheus",
+      "description": "Response time trend for BU-A and BU-B storefronts. Should stay under 300ms under normal load.",
+      "fieldConfig": { "defaults": { "unit": "s", "color": { "mode": "palette-classic" } }, "overrides": [] },
+      "gridPos": { "h": 8, "w": 12, "x": 0, "y": 9 },
+      "id": 2,
+      "options": { "legend": { "displayMode": "table", "placement": "bottom", "calcs": ["last", "max", "mean"] } },
+      "targets": [
+        { "expr": "probe_duration_seconds{job=\"blackbox-probes\",instance=~\".*500[12].*\"}", "legendFormat": "{{instance}}", "refId": "A" }
+      ],
+      "title": "BU Storefronts Latency (s)",
+      "type": "timeseries"
+    },
+    {
+      "datasource": "Prometheus",
+      "description": "Response time for Discovery API, Discovery Web, Meilisearch, and Keycloak.",
+      "fieldConfig": { "defaults": { "unit": "s", "color": { "mode": "palette-classic" } }, "overrides": [] },
+      "gridPos": { "h": 8, "w": 12, "x": 12, "y": 9 },
+      "id": 3,
+      "options": { "legend": { "displayMode": "table", "placement": "bottom", "calcs": ["last", "max", "mean"] } },
+      "targets": [
+        { "expr": "probe_duration_seconds{job=\"blackbox-probes\",instance=~\".*(5010|5011|7700|8080).*\"}", "legendFormat": "{{instance}}", "refId": "A" }
+      ],
+      "title": "Shared Services Latency (s)",
+      "type": "timeseries"
+    },
+    {
+      "collapsed": false,
+      "gridPos": { "h": 1, "w": 24, "x": 0, "y": 17 },
+      "id": 102,
+      "title": "▶ SLA Compliance",
+      "type": "row"
+    },
+    {
+      "datasource": "Prometheus",
+      "description": "What % of probes in the last hour responded under 500ms (SLA threshold).",
+      "fieldConfig": {
+        "defaults": {
+          "unit": "percent",
+          "color": { "mode": "thresholds" },
+          "thresholds": { "steps": [{ "color": "red", "value": null }, { "color": "orange", "value": 90 }, { "color": "green", "value": 99 }] }
+        }, "overrides": []
+      },
+      "gridPos": { "h": 6, "w": 8, "x": 0, "y": 18 },
+      "id": 4,
+      "options": { "reduceOptions": { "calcs": ["last"], "values": false }, "colorMode": "background", "orientation": "auto" },
+      "targets": [{ "expr": "100 * count(probe_duration_seconds{job=\"blackbox-probes\"} < 0.5) / count(probe_duration_seconds{job=\"blackbox-probes\"})", "legendFormat": "< 500ms", "refId": "A" }],
+      "title": "SLA Compliance — % probes < 500ms",
+      "type": "stat"
+    },
+    {
+      "datasource": "Prometheus",
+      "description": "The single slowest service right now.",
+      "fieldConfig": {
+        "defaults": {
+          "unit": "s",
+          "color": { "mode": "thresholds" },
+          "thresholds": { "steps": [{ "color": "green", "value": null }, { "color": "orange", "value": 0.5 }, { "color": "red", "value": 1.0 }] }
+        }, "overrides": []
+      },
+      "gridPos": { "h": 6, "w": 8, "x": 8, "y": 18 },
+      "id": 5,
+      "options": { "reduceOptions": { "calcs": ["last"], "values": false }, "colorMode": "value", "orientation": "auto" },
+      "targets": [{ "expr": "topk(1, probe_duration_seconds{job=\"blackbox-probes\"})", "legendFormat": "{{instance}}", "refId": "A" }],
+      "title": "Slowest Service Right Now",
+      "type": "stat"
+    },
+    {
+      "datasource": "Prometheus",
+      "description": "Count of probe failures in the last 5 minutes. Any failure = a user-facing service is down.",
+      "fieldConfig": {
+        "defaults": {
+          "unit": "short",
+          "color": { "mode": "thresholds" },
+          "thresholds": { "steps": [{ "color": "green", "value": null }, { "color": "red", "value": 1 }] }
+        }, "overrides": []
+      },
+      "gridPos": { "h": 6, "w": 8, "x": 16, "y": 18 },
+      "id": 6,
+      "options": { "reduceOptions": { "calcs": ["last"], "values": false }, "colorMode": "background", "orientation": "auto" },
+      "targets": [{ "expr": "count(probe_success{job=\"blackbox-probes\"} == 0)", "legendFormat": "Services DOWN", "refId": "A" }],
+      "title": "Services DOWN Right Now",
+      "type": "stat"
+    },
+    {
+      "datasource": "Prometheus",
+      "description": "Rolling p95 latency per service. Persistently high p95 = the service is struggling under load.",
+      "fieldConfig": { "defaults": { "unit": "s", "color": { "mode": "palette-classic" } }, "overrides": [] },
+      "gridPos": { "h": 8, "w": 24, "x": 0, "y": 24 },
+      "id": 7,
+      "options": { "legend": { "displayMode": "table", "placement": "right", "calcs": ["last", "max"] } },
+      "targets": [
+        { "expr": "max_over_time(probe_duration_seconds{job=\"blackbox-probes\"}[5m])", "legendFormat": "p95 {{instance}}", "refId": "A" }
+      ],
+      "title": "5-minute Rolling Max Latency per Service (s)",
+      "type": "timeseries"
+    }
+  ],
+  "schemaVersion": 30,
+  "style": "",
+  "tags": ["federation", "latency", "sla"],
+  "templating": { "list": [] },
+  "time": { "from": "now-1h", "to": "now" },
+  "timezone": "browser",
+  "title": "Federation Latency & SLA",
+  "refresh": "10s",
+  "version": 2
+}
+
+
+

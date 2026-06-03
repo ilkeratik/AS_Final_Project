@@ -1,0 +1,31 @@
+{
+  "name": "nopCommerce Copilot Policy (machine-readable)",
+  "last_updated": "2026-05-15",
+  "canonical_docs": [
+    "README.md",
+    "RULES.md",
+    "CONTRIBUTING.md",
+    "DEVELOPMENT_STATUS.md",
+    "KEY_GOALS.md"
+  ],
+  "constraints": {
+    "max_files": 10,
+    "max_lines_per_file": 2000,
+    "warn_code_files_threshold": 5
+  },
+  "coding_rules_summary": [
+    "Prefer plugin-first changes; avoid core rewrites",
+    "Use file-scoped namespaces and existing nopCommerce patterns",
+    "Use IRepository<T>, IEventPublisher, IConsumer<T> where appropriate",
+    "Make event consumers idempotent",
+    "Use ILogger for logging; no Console.WriteLine",
+    "Nullable-safe, async-first code",
+    "Do not add secrets or hardcoded infra values"
+  ],
+  "enforcement": {
+    "agent_guard_path": "scripts/agent_guard.py",
+    "require_guard_before_scan": true,
+    "ci_workflow": ".github/workflows/ensure-copilot-instructions.yml"
+  }
+}
+

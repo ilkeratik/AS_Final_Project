@@ -1,0 +1,228 @@
+{
+  "annotations": { "list": [] },
+  "editable": true,
+  "id": null,
+  "links": [],
+  "panels": [
+    {
+      "collapsed": false,
+      "gridPos": { "h": 1, "w": 24, "x": 0, "y": 0 },
+      "id": 100,
+      "title": "▶ Stage Snapshot — right now",
+      "type": "row"
+    },
+    {
+      "datasource": "Prometheus",
+      "description": "Events sitting in the outbox waiting to be picked up by the relay.",
+      "fieldConfig": {
+        "defaults": {
+          "unit": "short",
+          "color": { "mode": "thresholds" },
+          "thresholds": { "steps": [{ "color": "green", "value": null }, { "color": "orange", "value": 20 }, { "color": "red", "value": 100 }] }
+        }, "overrides": []
+      },
+      "gridPos": { "h": 5, "w": 4, "x": 0, "y": 1 },
+      "id": 1,
+      "options": { "reduceOptions": { "calcs": ["last"], "values": false }, "colorMode": "background", "graphMode": "area", "orientation": "auto" },
+      "targets": [{ "expr": "sum(federation_outbox_pending)", "legendFormat": "Queued", "refId": "A" }],
+      "title": "① Outbox Queued",
+      "type": "stat"
+    },
+    {
+      "datasource": "Prometheus",
+      "description": "Events being dispatched to Kafka per second (relay poll throughput).",
+      "fieldConfig": {
+        "defaults": {
+          "unit": "ops",
+          "color": { "mode": "thresholds" },
+          "thresholds": { "steps": [{ "color": "red", "value": null }, { "color": "orange", "value": 0.01 }, { "color": "green", "value": 0.1 }] }
+        }, "overrides": []
+      },
+      "gridPos": { "h": 5, "w": 4, "x": 4, "y": 1 },
+      "id": 2,
+      "options": { "reduceOptions": { "calcs": ["last"], "values": false }, "colorMode": "background", "graphMode": "area", "orientation": "auto" },
+      "targets": [{ "expr": "sum(rate(federation_outbox_processed[2m]))", "legendFormat": "Relay rate", "refId": "A" }],
+      "title": "② Relay Rate (ev/s)",
+      "type": "stat"
+    },
+    {
+      "datasource": "Prometheus",
+      "description": "Total events confirmed delivered to Kafka across all BUs.",
+      "fieldConfig": {
+        "defaults": {
+          "unit": "short",
+          "color": { "mode": "thresholds" },
+          "thresholds": { "steps": [{ "color": "blue", "value": null }] }
+        }, "overrides": []
+      },
+      "gridPos": { "h": 5, "w": 4, "x": 8, "y": 1 },
+      "id": 3,
+      "options": { "reduceOptions": { "calcs": ["last"], "values": false }, "colorMode": "background", "graphMode": "none", "orientation": "auto" },
+      "targets": [{ "expr": "sum(federation_outbox_processed)", "legendFormat": "Delivered", "refId": "A" }],
+      "title": "③ Kafka Delivered (total)",
+      "type": "stat"
+    },
+    {
+      "datasource": "Prometheus",
+      "description": "Products currently indexed in Meilisearch — the final stage of the pipeline.",
+      "fieldConfig": {
+        "defaults": {
+          "unit": "short",
+          "color": { "mode": "thresholds" },
+          "thresholds": { "steps": [{ "color": "purple", "value": null }] }
+        }, "overrides": []
+      },
+      "gridPos": { "h": 5, "w": 4, "x": 12, "y": 1 },
+      "id": 4,
+      "options": { "reduceOptions": { "calcs": ["last"], "values": false }, "colorMode": "background", "graphMode": "area", "orientation": "auto" },
+      "targets": [{ "expr": "sum(meilisearch_index_docs_count)", "legendFormat": "Indexed", "refId": "A" }],
+      "title": "④ Search Indexed (docs)",
+      "type": "stat"
+    },
+    {
+      "datasource": "Prometheus",
+      "description": "Age of the oldest message still pending in any outbox — measures end-to-end pipeline lag.",
+      "fieldConfig": {
+        "defaults": {
+          "unit": "s",
+          "color": { "mode": "thresholds" },
+          "thresholds": { "steps": [{ "color": "green", "value": null }, { "color": "orange", "value": 30 }, { "color": "red", "value": 120 }] }
+        }, "overrides": []
+      },
+      "gridPos": { "h": 5, "w": 4, "x": 16, "y": 1 },
+      "id": 5,
+      "options": { "reduceOptions": { "calcs": ["last"], "values": false }, "colorMode": "background", "graphMode": "area", "orientation": "auto" },
+      "targets": [{ "expr": "max(federation_outbox_oldest_pending_age_seconds)", "legendFormat": "Lag (s)", "refId": "A" }],
+      "title": "⚡ Pipeline Lag (s)",
+      "type": "stat"
+    },
+    {
+      "datasource": "Prometheus",
+      "description": "Messages that failed 5+ delivery attempts and are now stuck. Any value > 0 needs investigation.",
+      "fieldConfig": {
+        "defaults": {
+          "unit": "short",
+          "color": { "mode": "thresholds" },
+          "thresholds": { "steps": [{ "color": "green", "value": null }, { "color": "red", "value": 1 }] }
+        }, "overrides": []
+      },
+      "gridPos": { "h": 5, "w": 4, "x": 20, "y": 1 },
+      "id": 6,
+      "options": { "reduceOptions": { "calcs": ["last"], "values": false }, "colorMode": "background", "graphMode": "none", "orientation": "auto" },
+      "targets": [{ "expr": "sum(federation_outbox_deadletter)", "legendFormat": "Dead-letter", "refId": "A" }],
+      "title": "☠ Dead-Letter Count",
+      "type": "stat"
+    },
+    {
+      "collapsed": false,
+      "gridPos": { "h": 1, "w": 24, "x": 0, "y": 6 },
+      "id": 101,
+      "title": "▶ Flow — events entering vs leaving the outbox",
+      "type": "row"
+    },
+    {
+      "datasource": "Prometheus",
+      "description": "Compare the rate at which new rows arrive in the outbox (total rows growing) vs the relay drain rate (processed rows growing). A healthy pipeline has drain ≥ write.",
+      "fieldConfig": { "defaults": { "unit": "ops", "color": { "mode": "palette-classic" } }, "overrides": [] },
+      "gridPos": { "h": 9, "w": 12, "x": 0, "y": 7 },
+      "id": 7,
+      "options": { "legend": { "displayMode": "table", "placement": "bottom", "calcs": ["last", "max"] } },
+      "targets": [
+        { "expr": "sum(rate(federation_outbox_total[2m]))", "legendFormat": "Write rate (outbox total)", "refId": "A" },
+        { "expr": "sum(rate(federation_outbox_processed[2m]))", "legendFormat": "Drain rate (processed)", "refId": "B" }
+      ],
+      "title": "Outbox Write Rate vs Relay Drain Rate",
+      "type": "timeseries"
+    },
+    {
+      "datasource": "Prometheus",
+      "description": "Rate at which Meilisearch documents are being added. Spikes after a relay burst, flat when idle.",
+      "fieldConfig": { "defaults": { "unit": "ops", "color": { "mode": "palette-classic" } }, "overrides": [] },
+      "gridPos": { "h": 9, "w": 12, "x": 12, "y": 7 },
+      "id": 8,
+      "options": { "legend": { "displayMode": "table", "placement": "bottom", "calcs": ["last", "max"] } },
+      "targets": [
+        { "expr": "sum(rate(meilisearch_http_requests_total{path=~\".*documents.*\"}[2m]))", "legendFormat": "Indexer write req/s", "refId": "A" },
+        { "expr": "sum(rate(meilisearch_http_requests_total{path=~\".*search.*\"}[2m]))", "legendFormat": "Search req/s", "refId": "B" }
+      ],
+      "title": "Meilisearch: Index Writes vs Search Reads",
+      "type": "timeseries"
+    },
+    {
+      "collapsed": false,
+      "gridPos": { "h": 1, "w": 24, "x": 0, "y": 16 },
+      "id": 102,
+      "title": "▶ Lag & Bottleneck Detection — per BU",
+      "type": "row"
+    },
+    {
+      "datasource": "Prometheus",
+      "description": "Oldest unprocessed message age per BU. If this grows over 30s there's a relay or Kafka problem. Over 2 min = likely outage.",
+      "fieldConfig": {
+        "defaults": {
+          "unit": "s",
+          "color": { "mode": "palette-classic" },
+          "custom": { "lineWidth": 2 },
+          "thresholds": { "steps": [{ "color": "green", "value": null }, { "color": "orange", "value": 30 }, { "color": "red", "value": 120 }] }
+        }, "overrides": []
+      },
+      "gridPos": { "h": 8, "w": 12, "x": 0, "y": 17 },
+      "id": 9,
+      "options": { "legend": { "displayMode": "table", "placement": "bottom", "calcs": ["last", "max"] } },
+      "targets": [{ "expr": "federation_outbox_oldest_pending_age_seconds", "legendFormat": "{{bu}} lag", "refId": "A" }],
+      "title": "Pipeline Lag per BU (oldest pending age, seconds)",
+      "type": "timeseries"
+    },
+    {
+      "datasource": "Prometheus",
+      "description": "Stacked view of pending vs dead-letter rows per BU. Growing pending + growing dead-letter = pipeline blocked.",
+      "fieldConfig": {
+        "defaults": { "unit": "short", "color": { "mode": "palette-classic" },
+          "custom": { "fillOpacity": 50, "stacking": { "group": "A", "mode": "normal" } }
+        }, "overrides": []
+      },
+      "gridPos": { "h": 8, "w": 12, "x": 12, "y": 17 },
+      "id": 10,
+      "options": { "legend": { "displayMode": "table", "placement": "bottom", "calcs": ["last"] } },
+      "targets": [
+        { "expr": "federation_outbox_pending", "legendFormat": "{{bu}} pending", "refId": "A" },
+        { "expr": "federation_outbox_deadletter", "legendFormat": "{{bu}} dead-letter", "refId": "B" }
+      ],
+      "title": "Pending vs Dead-Letter per BU (stacked)",
+      "type": "timeseries"
+    },
+    {
+      "collapsed": false,
+      "gridPos": { "h": 1, "w": 24, "x": 0, "y": 25 },
+      "id": 103,
+      "title": "▶ All Services Availability — pipeline dependencies",
+      "type": "row"
+    },
+    {
+      "datasource": "Prometheus",
+      "description": "All services that the pipeline depends on. Any red cell = that pipeline stage is blocked.",
+      "fieldConfig": {
+        "defaults": {
+          "color": { "mode": "thresholds" },
+          "thresholds": { "steps": [{ "color": "red", "value": null }, { "color": "green", "value": 1 }] },
+          "mappings": [{ "type": "value", "options": { "0": { "text": "DOWN" }, "1": { "text": "UP" } } }]
+        }, "overrides": []
+      },
+      "gridPos": { "h": 6, "w": 24, "x": 0, "y": 26 },
+      "id": 11,
+      "options": { "reduceOptions": { "calcs": ["last"], "values": false }, "orientation": "horizontal", "colorMode": "background" },
+      "targets": [{ "expr": "probe_success{job=\"blackbox-probes\"}", "legendFormat": "{{instance}}", "refId": "A" }],
+      "title": "Service Health — pipeline dependency map",
+      "type": "stat"
+    }
+  ],
+  "refresh": "10s",
+  "schemaVersion": 30,
+  "tags": ["federation", "pipeline", "e2e"],
+  "templating": { "list": [] },
+  "time": { "from": "now-1h", "to": "now" },
+  "timezone": "browser",
+  "title": "Federation Pipeline End-to-End",
+  "version": 1
+}
+

@@ -1,0 +1,5 @@
+Name,ParentCategory,Description,Published,DisplayOrder
+Living Room,,"Sofas, chairs, and coffee tables",True,1
+Bedroom,,"Beds, nightstands, and storage",True,2
+Outdoor,,"Patio seating and seasonal sets",True,3
+

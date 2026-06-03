@@ -1,0 +1,48 @@
+# Local IDE settings
+.idea/
+.vs/
+.vscode/
+*.suo
+*.user
+*.userosscache
+*.sln.docstates
+
+# Build results
+[Dd]ebug/
+[Dd]ebugPublic/
+[Rr]elease/
+[Rr]eleases/
+x64/
+x86/
+[Aa]rm/
+[Aa]rm64/
+bld/
+[Bb]in/
+[Oo]bj/
+[Ll]og/
+[Ll]ogs/
+
+# .NET Core
+project.lock.json
+project.fragment.lock.json
+artifacts/
+*.cache
+
+# Local app data (nopCommerce)
+_appdata/
+_appdata-*/
+
+# OS
+.DS_Store
+Thumbs.db
+
+# Logs
+*.log
+
+# Environment files with secrets (.env.example is tracked as the safe template)
+.env
+.env.local
+
+# Docker volumes data
+postgres-data-*/
+

@@ -1,0 +1,196 @@
+{
+  "annotations": { "list": [] },
+  "editable": true,
+  "id": null,
+  "links": [],
+  "panels": [
+    {
+      "collapsed": false,
+      "gridPos": { "h": 1, "w": 24, "x": 0, "y": 0 },
+      "id": 100,
+      "title": "▶ Keycloak Availability",
+      "type": "row"
+    },
+    {
+      "datasource": "Prometheus",
+      "description": "Is the Keycloak SSO endpoint responding? Red = login will fail for all BUs.",
+      "fieldConfig": {
+        "defaults": {
+          "color": { "mode": "thresholds" },
+          "thresholds": { "steps": [{ "color": "red", "value": null }, { "color": "green", "value": 1 }] },
+          "mappings": [{ "type": "value", "options": { "0": { "text": "DOWN" }, "1": { "text": "UP" } } }]
+        }, "overrides": []
+      },
+      "gridPos": { "h": 5, "w": 6, "x": 0, "y": 1 },
+      "id": 1,
+      "options": { "reduceOptions": { "calcs": ["last"], "values": false }, "colorMode": "background", "orientation": "auto" },
+      "targets": [{ "expr": "probe_success{job=\"blackbox-probes\",instance=~\".*8080.*\"}", "legendFormat": "Keycloak", "refId": "A" }],
+      "title": "Keycloak Status",
+      "type": "stat"
+    },
+    {
+      "datasource": "Prometheus",
+      "description": "Keycloak /health/ready response time. >500ms = slow logins.",
+      "fieldConfig": {
+        "defaults": {
+          "unit": "s",
+          "color": { "mode": "thresholds" },
+          "thresholds": { "steps": [{ "color": "green", "value": null }, { "color": "orange", "value": 0.3 }, { "color": "red", "value": 1.0 }] }
+        }, "overrides": []
+      },
+      "gridPos": { "h": 5, "w": 6, "x": 6, "y": 1 },
+      "id": 2,
+      "options": { "reduceOptions": { "calcs": ["last"], "values": false }, "colorMode": "value", "graphMode": "area", "orientation": "auto" },
+      "targets": [{ "expr": "probe_duration_seconds{job=\"blackbox-probes\",instance=~\".*8080.*\"}", "legendFormat": "Response time", "refId": "A" }],
+      "title": "Keycloak Response Time",
+      "type": "stat"
+    },
+    {
+      "datasource": "Prometheus",
+      "description": "Percentage of probe checks in the last 24h where Keycloak was UP.",
+      "fieldConfig": {
+        "defaults": {
+          "unit": "percent",
+          "color": { "mode": "thresholds" },
+          "thresholds": { "steps": [{ "color": "red", "value": null }, { "color": "orange", "value": 95 }, { "color": "green", "value": 99.5 }] }
+        }, "overrides": []
+      },
+      "gridPos": { "h": 5, "w": 6, "x": 12, "y": 1 },
+      "id": 3,
+      "options": { "reduceOptions": { "calcs": ["last"], "values": false }, "colorMode": "background", "orientation": "auto" },
+      "targets": [{ "expr": "avg_over_time(probe_success{job=\"blackbox-probes\",instance=~\".*8080.*\"}[24h]) * 100", "legendFormat": "Uptime %", "refId": "A" }],
+      "title": "Keycloak 24h Uptime %",
+      "type": "stat"
+    },
+    {
+      "datasource": "Prometheus",
+      "description": "Keycloak readiness probe response time trend. Spikes correlate with GC pauses or heavy login storms.",
+      "fieldConfig": { "defaults": { "unit": "s", "color": { "mode": "palette-classic" } }, "overrides": [] },
+      "gridPos": { "h": 5, "w": 6, "x": 18, "y": 1 },
+      "id": 4,
+      "options": { "legend": { "displayMode": "list", "placement": "bottom", "calcs": ["last"] } },
+      "targets": [{ "expr": "probe_duration_seconds{job=\"blackbox-probes\",instance=~\".*8080.*\"}", "legendFormat": "Keycloak", "refId": "A" }],
+      "title": "Keycloak Response Trend",
+      "type": "timeseries"
+    },
+    {
+      "collapsed": false,
+      "gridPos": { "h": 1, "w": 24, "x": 0, "y": 6 },
+      "id": 101,
+      "title": "▶ Authentication Activity",
+      "type": "row"
+    },
+    {
+      "datasource": "Prometheus",
+      "description": "Customer-related events emitted by the Keycloak consumer (login, logout, registration) — tracked via the outbox. Requires KC_METRICS_ENABLED=true for native Keycloak metrics.",
+      "fieldConfig": { "defaults": { "unit": "short", "color": { "mode": "palette-classic" } }, "overrides": [] },
+      "gridPos": { "h": 8, "w": 12, "x": 0, "y": 7 },
+      "id": 5,
+      "options": { "legend": { "displayMode": "table", "placement": "bottom", "calcs": ["last", "max"] } },
+      "targets": [
+        { "expr": "sum by (bu) (federation_outbox_events_last_24h{event_type=~\"customer.*\"})", "legendFormat": "{{bu}} customer events", "refId": "A" }
+      ],
+      "title": "SSO-Triggered Customer Events (Last 24h, via Outbox)",
+      "type": "timeseries"
+    },
+    {
+      "datasource": "Prometheus",
+      "description": "Native Keycloak login rate by realm. Requires KC_METRICS_ENABLED=true. Shows successful logins only (error=\"\").",
+      "fieldConfig": { "defaults": { "unit": "ops", "color": { "mode": "palette-classic" } }, "overrides": [] },
+      "gridPos": { "h": 8, "w": 12, "x": 12, "y": 7 },
+      "id": 6,
+      "options": { "legend": { "displayMode": "table", "placement": "bottom", "calcs": ["last", "max"] } },
+      "targets": [
+        { "expr": "sum by (realm) (rate(keycloak_logins_total{error=\"\"}[5m]))", "legendFormat": "{{realm}} logins/s", "refId": "A" }
+      ],
+      "title": "Keycloak Login Rate by Realm (req/s)",
+      "type": "timeseries"
+    },
+    {
+      "collapsed": false,
+      "gridPos": { "h": 1, "w": 24, "x": 0, "y": 15 },
+      "id": 102,
+      "title": "▶ Login Failures & Sessions — requires KC_METRICS_ENABLED=true",
+      "type": "row"
+    },
+    {
+      "datasource": "Prometheus",
+      "description": "Total failed login attempts since startup. Any sustained rate increase is a potential brute-force attack or misconfigured client.",
+      "fieldConfig": {
+        "defaults": {
+          "unit": "short",
+          "color": { "mode": "thresholds" },
+          "thresholds": { "steps": [{ "color": "green", "value": null }, { "color": "orange", "value": 10 }, { "color": "red", "value": 50 }] }
+        }, "overrides": []
+      },
+      "gridPos": { "h": 6, "w": 6, "x": 0, "y": 16 },
+      "id": 7,
+      "options": { "reduceOptions": { "calcs": ["last"], "values": false }, "colorMode": "background", "orientation": "auto" },
+      "targets": [{ "expr": "sum(keycloak_failed_login_attempts_total)", "legendFormat": "Failed logins", "refId": "A" }],
+      "title": "Failed Login Attempts (total)",
+      "type": "stat"
+    },
+    {
+      "datasource": "Prometheus",
+      "description": "Currently active SSO sessions across all realms.",
+      "fieldConfig": {
+        "defaults": {
+          "unit": "short",
+          "color": { "mode": "thresholds" },
+          "thresholds": { "steps": [{ "color": "blue", "value": null }] }
+        }, "overrides": []
+      },
+      "gridPos": { "h": 6, "w": 6, "x": 6, "y": 16 },
+      "id": 8,
+      "options": { "reduceOptions": { "calcs": ["last"], "values": false }, "colorMode": "background", "graphMode": "area", "orientation": "auto" },
+      "targets": [{ "expr": "sum(keycloak_active_sessions)", "legendFormat": "Active sessions", "refId": "A" }],
+      "title": "Active SSO Sessions",
+      "type": "stat"
+    },
+    {
+      "datasource": "Prometheus",
+      "description": "Login success vs failure rate over time. A rising failure ratio = auth issue (bad client secret, OIDC misconfiguration, or attack).",
+      "fieldConfig": { "defaults": { "unit": "ops", "color": { "mode": "palette-classic" } }, "overrides": [] },
+      "gridPos": { "h": 6, "w": 12, "x": 12, "y": 16 },
+      "id": 9,
+      "options": { "legend": { "displayMode": "table", "placement": "bottom", "calcs": ["last"] } },
+      "targets": [
+        { "expr": "sum(rate(keycloak_logins_total{error=\"\"}[5m]))", "legendFormat": "Success/s", "refId": "A" },
+        { "expr": "sum(rate(keycloak_failed_login_attempts_total[5m]))", "legendFormat": "Failure/s", "refId": "B" }
+      ],
+      "title": "Login Success vs Failure Rate",
+      "type": "timeseries"
+    },
+    {
+      "collapsed": false,
+      "gridPos": { "h": 1, "w": 24, "x": 0, "y": 22 },
+      "id": 103,
+      "title": "▶ Request Performance",
+      "type": "row"
+    },
+    {
+      "datasource": "Prometheus",
+      "description": "Keycloak p50 / p95 / p99 request duration from native histogram. Requires KC_METRICS_ENABLED=true.",
+      "fieldConfig": { "defaults": { "unit": "ms", "color": { "mode": "palette-classic" } }, "overrides": [] },
+      "gridPos": { "h": 8, "w": 24, "x": 0, "y": 23 },
+      "id": 10,
+      "options": { "legend": { "displayMode": "table", "placement": "right", "calcs": ["last", "max"] } },
+      "targets": [
+        { "expr": "histogram_quantile(0.50, sum by (le) (rate(keycloak_request_duration_milliseconds_bucket[5m])))", "legendFormat": "p50", "refId": "A" },
+        { "expr": "histogram_quantile(0.95, sum by (le) (rate(keycloak_request_duration_milliseconds_bucket[5m])))", "legendFormat": "p95", "refId": "B" },
+        { "expr": "histogram_quantile(0.99, sum by (le) (rate(keycloak_request_duration_milliseconds_bucket[5m])))", "legendFormat": "p99", "refId": "C" }
+      ],
+      "title": "Keycloak Request Duration p50 / p95 / p99 (ms)",
+      "type": "timeseries"
+    }
+  ],
+  "refresh": "15s",
+  "schemaVersion": 30,
+  "tags": ["federation", "sso", "keycloak"],
+  "templating": { "list": [] },
+  "time": { "from": "now-3h", "to": "now" },
+  "timezone": "browser",
+  "title": "Federation SSO — Keycloak",
+  "version": 1
+}
+

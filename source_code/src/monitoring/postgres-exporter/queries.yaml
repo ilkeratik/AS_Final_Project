@@ -1,0 +1,263 @@
+## Custom postgres_exporter queries for the Federation transactional outbox.
+## New query families (2026-06-03):
+##   federation_outbox_by_topic   — pending/processed/total split by Kafka topic
+##   federation_outbox_retry      — retry success rate and backlog
+##   federation_catalog_products  — product counts by lifecycle state
+##   federation_catalog_orders    — order counts by status
+##   federation_catalog_customers — customer counts by type
+## Each BU exporter runs this against its own nopCommerce database.
+## Produces gauges named federation_outbox_* that drive the Grafana Outbox/Relay dashboards.
+
+federation_outbox:
+  query: |
+    SELECT
+      COALESCE(COUNT(*) FILTER (WHERE "ProcessedOnUtc" IS NULL AND "Attempts" < 5), 0)  AS pending,
+      COALESCE(COUNT(*) FILTER (WHERE "ProcessedOnUtc" IS NOT NULL), 0)                  AS processed,
+      COALESCE(COUNT(*) FILTER (WHERE "Attempts" >= 5), 0)                               AS deadletter,
+      COALESCE(COUNT(*), 0)                                                              AS total,
+      COALESCE(
+        EXTRACT(EPOCH FROM (now() - MIN("CreatedOnUtc") FILTER (WHERE "ProcessedOnUtc" IS NULL))),
+        0
+      )                                                                                  AS oldest_pending_age_seconds
+    FROM "OutboxMessage"
+  master: true
+  metrics:
+    - pending:
+        usage: "GAUGE"
+        description: "Outbox rows waiting to be published to Kafka"
+    - processed:
+        usage: "GAUGE"
+        description: "Outbox rows already published to Kafka"
+    - deadletter:
+        usage: "GAUGE"
+        description: "Outbox rows that exceeded MaxAttempts (dead-letter)"
+    - total:
+        usage: "GAUGE"
+        description: "Total outbox rows"
+    - oldest_pending_age_seconds:
+        usage: "GAUGE"
+        description: "Age in seconds of the oldest pending outbox row (backlog indicator)"
+
+federation_outbox_events:
+  query: |
+    SELECT
+      "EventType"::text                                                             AS event_type,
+      COALESCE(COUNT(*), 0)                                                          AS total,
+      COALESCE(COUNT(*) FILTER (WHERE "ProcessedOnUtc" IS NULL AND "Attempts" < 5), 0) AS pending,
+      COALESCE(COUNT(*) FILTER (WHERE "ProcessedOnUtc" IS NOT NULL), 0)             AS processed,
+      COALESCE(COUNT(*) FILTER (WHERE "CreatedOnUtc" >= now() - interval '1 hour'), 0)  AS last_1h,
+      COALESCE(COUNT(*) FILTER (WHERE "CreatedOnUtc" >= now() - interval '24 hour'), 0) AS last_24h
+    FROM "OutboxMessage"
+    GROUP BY "EventType"
+  master: true
+  metrics:
+    - event_type:
+        usage: "LABEL"
+        description: "Business event type"
+    - total:
+        usage: "GAUGE"
+        description: "Total outbox rows for the event type"
+    - pending:
+        usage: "GAUGE"
+        description: "Pending outbox rows for the event type"
+    - processed:
+        usage: "GAUGE"
+        description: "Processed outbox rows for the event type"
+    - last_1h:
+        usage: "GAUGE"
+        description: "Outbox rows created in the last hour for the event type"
+    - last_24h:
+        usage: "GAUGE"
+        description: "Outbox rows created in the last 24 hours for the event type"
+
+federation_activity_business:
+  query: |
+    SELECT
+      CASE alt."SystemKeyword"
+        WHEN 'AddNewProduct'   THEN 'product.created.admin'
+        WHEN 'EditProduct'     THEN 'product.updated.admin'
+        WHEN 'DeleteProduct'   THEN 'product.deleted.admin'
+        WHEN 'AddNewCustomer'  THEN 'customer.created.admin'
+        WHEN 'EditCustomer'    THEN 'customer.updated.admin'
+        WHEN 'DeleteCustomer'  THEN 'customer.deleted.admin'
+        WHEN 'EditOrder'       THEN 'order.updated.admin'
+        WHEN 'DeleteOrder'     THEN 'order.deleted.admin'
+        ELSE alt."SystemKeyword"
+      END AS business_event,
+      COALESCE(COUNT(*) FILTER (WHERE al."CreatedOnUtc" >= now() - interval '1 hour'), 0)  AS last_1h,
+      COALESCE(COUNT(*) FILTER (WHERE al."CreatedOnUtc" >= now() - interval '24 hour'), 0) AS last_24h,
+      COALESCE(COUNT(*), 0) AS total
+    FROM "ActivityLog" al
+    INNER JOIN "ActivityLogType" alt ON alt."Id" = al."ActivityLogTypeId"
+    WHERE alt."SystemKeyword" IN (
+      'AddNewProduct', 'EditProduct', 'DeleteProduct',
+      'AddNewCustomer', 'EditCustomer', 'DeleteCustomer',
+      'EditOrder', 'DeleteOrder'
+    )
+    GROUP BY 1
+  master: true
+  metrics:
+    - business_event:
+        usage: "LABEL"
+        description: "Mapped business activity keyword"
+    - last_1h:
+        usage: "GAUGE"
+        description: "Activity log entries in the last hour"
+    - last_24h:
+        usage: "GAUGE"
+        description: "Activity log entries in the last 24 hours"
+    - total:
+        usage: "GAUGE"
+        description: "Total activity log entries"
+
+
+# ─── Per-topic outbox split ────────────────────────────────────────────────────
+federation_outbox_by_topic:
+  query: |
+    SELECT
+      "Topic"::text                                                                        AS topic,
+      COALESCE(COUNT(*) FILTER (WHERE "ProcessedOnUtc" IS NULL AND "Attempts" < 5), 0)    AS pending,
+      COALESCE(COUNT(*) FILTER (WHERE "ProcessedOnUtc" IS NOT NULL), 0)                   AS processed,
+      COALESCE(COUNT(*) FILTER (WHERE "Attempts" >= 5), 0)                                AS deadletter,
+      COALESCE(COUNT(*), 0)                                                               AS total,
+      COALESCE(COUNT(*) FILTER (WHERE "CreatedOnUtc" >= now() - interval '1 hour'),  0)   AS last_1h,
+      COALESCE(COUNT(*) FILTER (WHERE "CreatedOnUtc" >= now() - interval '24 hours'), 0)  AS last_24h
+    FROM "OutboxMessage"
+    GROUP BY "Topic"
+  master: true
+  metrics:
+    - topic:
+        usage: "LABEL"
+        description: "Kafka topic name"
+    - pending:
+        usage: "GAUGE"
+        description: "Pending outbox rows for this topic"
+    - processed:
+        usage: "GAUGE"
+        description: "Processed outbox rows for this topic"
+    - deadletter:
+        usage: "GAUGE"
+        description: "Dead-letter outbox rows for this topic"
+    - total:
+        usage: "GAUGE"
+        description: "Total outbox rows for this topic"
+    - last_1h:
+        usage: "GAUGE"
+        description: "Rows created in the last hour for this topic"
+    - last_24h:
+        usage: "GAUGE"
+        description: "Rows created in the last 24 hours for this topic"
+
+# ─── Retry health ─────────────────────────────────────────────────────────────
+federation_outbox_retry:
+  query: |
+    SELECT
+      COALESCE(COUNT(*) FILTER (WHERE "Attempts" > 0 AND "ProcessedOnUtc" IS NOT NULL), 0)                    AS retry_succeeded,
+      COALESCE(COUNT(*) FILTER (WHERE "Attempts" > 0 AND "ProcessedOnUtc" IS NULL AND "Attempts" < 5), 0)     AS retry_pending,
+      COALESCE(COUNT(*) FILTER (WHERE "Attempts" >= 5), 0)                                                     AS dead_lettered,
+      COALESCE(
+        CASE
+          WHEN COUNT(*) FILTER (WHERE "Attempts" > 0) = 0 THEN 100
+          ELSE ROUND(
+            100.0
+            * COUNT(*) FILTER (WHERE "Attempts" > 0 AND "ProcessedOnUtc" IS NOT NULL)::numeric
+            / NULLIF(COUNT(*) FILTER (WHERE "Attempts" > 0), 0)
+          )
+        END,
+        100
+      )                                                                                                         AS retry_success_pct
+    FROM "OutboxMessage"
+  master: true
+  metrics:
+    - retry_succeeded:
+        usage: "GAUGE"
+        description: "Rows that needed retries but eventually succeeded"
+    - retry_pending:
+        usage: "GAUGE"
+        description: "Rows currently in retry backlog (attempts > 0, not yet processed)"
+    - dead_lettered:
+        usage: "GAUGE"
+        description: "Rows that exhausted all retries"
+    - retry_success_pct:
+        usage: "GAUGE"
+        description: "Percentage of retried messages that eventually succeeded (100 if none retried)"
+
+# ─── Product catalog state ────────────────────────────────────────────────────
+federation_catalog_products:
+  query: |
+    SELECT
+      COALESCE(COUNT(*) FILTER (WHERE "Deleted" = false), 0)                              AS active,
+      COALESCE(COUNT(*) FILTER (WHERE "Published" = true  AND "Deleted" = false), 0)      AS published,
+      COALESCE(COUNT(*) FILTER (WHERE "Published" = false AND "Deleted" = false), 0)      AS unpublished,
+      COALESCE(COUNT(*) FILTER (WHERE "Deleted" = true), 0)                               AS deleted,
+      COALESCE(COUNT(*), 0)                                                               AS total
+    FROM "Product"
+  master: true
+  metrics:
+    - active:
+        usage: "GAUGE"
+        description: "Products not soft-deleted"
+    - published:
+        usage: "GAUGE"
+        description: "Live published products"
+    - unpublished:
+        usage: "GAUGE"
+        description: "Active but not published products"
+    - deleted:
+        usage: "GAUGE"
+        description: "Soft-deleted products"
+    - total:
+        usage: "GAUGE"
+        description: "All product rows including deleted"
+
+# ─── Order catalog state ──────────────────────────────────────────────────────
+federation_catalog_orders:
+  query: |
+    SELECT
+      COALESCE(COUNT(*) FILTER (WHERE "OrderStatusId" = 10), 0) AS pending,
+      COALESCE(COUNT(*) FILTER (WHERE "OrderStatusId" = 20), 0) AS processing,
+      COALESCE(COUNT(*) FILTER (WHERE "OrderStatusId" = 30), 0) AS complete,
+      COALESCE(COUNT(*) FILTER (WHERE "OrderStatusId" = 40), 0) AS cancelled,
+      COALESCE(COUNT(*), 0)                                     AS total
+    FROM "Order"
+  master: true
+  metrics:
+    - pending:
+        usage: "GAUGE"
+        description: "Orders in Pending status (10)"
+    - processing:
+        usage: "GAUGE"
+        description: "Orders in Processing status (20)"
+    - complete:
+        usage: "GAUGE"
+        description: "Completed orders (30)"
+    - cancelled:
+        usage: "GAUGE"
+        description: "Cancelled orders (40)"
+    - total:
+        usage: "GAUGE"
+        description: "Total orders across all statuses"
+
+# ─── Customer catalog state ───────────────────────────────────────────────────
+federation_catalog_customers:
+  query: |
+    SELECT
+      COALESCE(COUNT(*) FILTER (WHERE "IsSystemAccount" = false AND "Active" = true  AND "Deleted" = false), 0) AS active,
+      COALESCE(COUNT(*) FILTER (WHERE "IsSystemAccount" = false AND "Active" = false AND "Deleted" = false), 0) AS inactive,
+      COALESCE(COUNT(*) FILTER (WHERE "Deleted" = true), 0)                                                     AS deleted,
+      COALESCE(COUNT(*) FILTER (WHERE "IsSystemAccount" = false AND "Deleted" = false), 0)                      AS total_real
+    FROM "Customer"
+  master: true
+  metrics:
+    - active:
+        usage: "GAUGE"
+        description: "Active, non-deleted, non-system customer accounts"
+    - inactive:
+        usage: "GAUGE"
+        description: "Inactive (disabled) non-system customer accounts"
+    - deleted:
+        usage: "GAUGE"
+        description: "Soft-deleted customer records"
+    - total_real:
+        usage: "GAUGE"
+        description: "All non-system non-deleted customers (active + inactive)"

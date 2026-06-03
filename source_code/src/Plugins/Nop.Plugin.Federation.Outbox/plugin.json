@@ -1,0 +1,12 @@
+{
+  "Group": "Misc",
+  "FriendlyName": "Federation Outbox",
+  "SystemName": "Misc.Federation.Outbox",
+  "Version": "1.0.0",
+  "SupportedVersions": [ "4.90" ],
+  "Author": "FederationPlatform",
+  "DisplayOrder": 1,
+  "FileName": "Nop.Plugin.Federation.Outbox.dll",
+  "Description": "Transactional outbox: captures product domain events into a relay table for the federated commerce platform."
+}
+

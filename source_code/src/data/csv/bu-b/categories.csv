@@ -1,0 +1,5 @@
+Name,ParentCategory,Description,Published,DisplayOrder
+Dining,,"Tables and seating for gatherings",True,1
+Sleep,,"Mattresses and bedding essentials",True,2
+Office,,"Home office furniture and storage",True,3
+

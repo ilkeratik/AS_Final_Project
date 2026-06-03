@@ -1,0 +1,78 @@
+services:
+  prometheus:
+    image: prom/prometheus:latest
+    container_name: federation_prometheus_1
+    volumes:
+      - ./prometheus:/etc/prometheus
+      - prometheus_data:/prometheus
+    command:
+      - --config.file=/etc/prometheus/prometheus.yml
+      - --storage.tsdb.path=/prometheus
+    ports:
+      - 9090:9090
+    networks:
+      - monitoring
+
+  blackbox:
+    image: prom/blackbox-exporter:latest
+    container_name: federation_blackbox_1
+    ports:
+      - 9115:9115
+    networks:
+      - monitoring
+
+  # ── Postgres exporters: real transactional-outbox metrics per BU ─────────────
+  postgres-exporter-bua:
+    image: quay.io/prometheuscommunity/postgres-exporter:v0.15.0
+    container_name: federation_pg_exporter_bua
+    environment:
+      DATA_SOURCE_NAME: "postgresql://nopcommerce_bua:${BUA_DB_PASS:-nopcommerce123}@host.docker.internal:5433/nopcommerce?sslmode=disable"
+      PG_EXPORTER_EXTEND_QUERY_PATH: "/queries.yaml"
+    volumes:
+      - ./postgres-exporter/queries.yaml:/queries.yaml:ro
+    extra_hosts:
+      - "host.docker.internal:host-gateway"
+    ports:
+      - 9187:9187
+    networks:
+      - monitoring
+
+  postgres-exporter-bub:
+    image: quay.io/prometheuscommunity/postgres-exporter:v0.15.0
+    container_name: federation_pg_exporter_bub
+    environment:
+      DATA_SOURCE_NAME: "postgresql://nopcommerce_bub:${BUB_DB_PASS:-nopcommerce123}@host.docker.internal:5434/nopcommerce?sslmode=disable"
+      PG_EXPORTER_EXTEND_QUERY_PATH: "/queries.yaml"
+    volumes:
+      - ./postgres-exporter/queries.yaml:/queries.yaml:ro
+    extra_hosts:
+      - "host.docker.internal:host-gateway"
+    ports:
+      - 9188:9187
+    networks:
+      - monitoring
+
+  grafana:
+    image: grafana/grafana:latest
+    container_name: federation_grafana_1
+    environment:
+      - GF_AUTH_ANONYMOUS_ENABLED=true
+      - GF_SECURITY_ADMIN_PASSWORD=admin
+    ports:
+      - 3000:3000
+    volumes:
+      - grafana_data:/var/lib/grafana
+      - ./grafana/provisioning:/etc/grafana/provisioning:ro
+      - ./grafana/dashboards:/var/lib/grafana/dashboards:ro
+    networks:
+      - monitoring
+
+volumes:
+  prometheus_data:
+  grafana_data:
+
+networks:
+  monitoring:
+    driver: bridge
+
+

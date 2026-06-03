@@ -1,0 +1,119 @@
+{
+  "annotations": {"list":[]},
+  "editable": true,
+  "gnetId": null,
+  "id": null,
+  "links": [],
+  "panels": [
+    {
+      "datasource":"Prometheus",
+      "fieldConfig":{"defaults":{"unit":"short","color":{"mode":"palette-classic"}},"overrides":[]},
+      "gridPos":{"h":7,"w":12,"x":0,"y":0},
+      "id":1,
+      "options":{"legend":{"displayMode":"table","placement":"bottom","calcs":["last"]}},
+      "targets":[{"expr":"federation_outbox_pending","legendFormat":"{{bu}} pending","refId":"A"}],
+      "title":"Outbox pending rows (per BU) — spikes on replay, drains in ~5s",
+      "type":"timeseries"
+    },
+    {
+      "datasource":"Prometheus",
+      "fieldConfig":{"defaults":{"unit":"short","color":{"mode":"palette-classic"}},"overrides":[]},
+      "gridPos":{"h":7,"w":12,"x":12,"y":0},
+      "id":2,
+      "options":{"legend":{"displayMode":"table","placement":"bottom","calcs":["last"]}},
+      "targets":[{"expr":"federation_outbox_processed","legendFormat":"{{bu}} processed","refId":"A"}],
+      "title":"Outbox processed rows (per BU)",
+      "type":"timeseries"
+    },
+    {
+      "datasource":"Prometheus",
+      "fieldConfig":{"defaults":{"unit":"s","color":{"mode":"thresholds"},"thresholds":{"steps":[{"color":"green","value":null},{"color":"red","value":30}]}},"overrides":[]},
+      "gridPos":{"h":6,"w":12,"x":0,"y":7},
+      "id":3,
+      "options":{"reduceOptions":{"calcs":["last"]}},
+      "targets":[{"expr":"max(federation_outbox_oldest_pending_age_seconds)","refId":"A"}],
+      "title":"Oldest pending age (s) — backlog indicator",
+      "type":"stat"
+    },
+    {
+      "datasource":"Prometheus",
+      "fieldConfig":{"defaults":{"unit":"short","color":{"mode":"thresholds"},"thresholds":{"steps":[{"color":"green","value":null},{"color":"red","value":1}]}},"overrides":[]},
+      "gridPos":{"h":6,"w":6,"x":12,"y":7},
+      "id":4,
+      "options":{"reduceOptions":{"calcs":["last"]}},
+      "targets":[{"expr":"sum(federation_outbox_deadletter)","refId":"A"}],
+      "title":"Dead-letter rows (Attempts ≥ 5)",
+      "type":"stat"
+    },
+    {
+      "datasource":"Prometheus",
+      "fieldConfig":{"defaults":{"unit":"short","color":{"mode":"palette-classic"}},"overrides":[]},
+      "gridPos":{"h":6,"w":6,"x":18,"y":7},
+      "id":5,
+      "options":{"reduceOptions":{"calcs":["last"]}},
+      "targets":[{"expr":"federation_outbox_total","legendFormat":"{{bu}}","refId":"A"}],
+      "title":"Total outbox rows (per BU)",
+      "type":"stat"
+    },
+    {
+      "collapsed": false,
+      "gridPos": { "h": 1, "w": 24, "x": 0, "y": 13 },
+      "id": 100,
+      "title": "▶ Event Type Breakdown",
+      "type": "row"
+    },
+    {
+      "datasource":"Prometheus",
+      "description": "Which event types are filling the outbox per BU. Helps spot if one category (e.g. product.*) is dominating.",
+      "fieldConfig":{"defaults":{"unit":"short","color":{"mode":"palette-classic"},"custom":{"fillOpacity":70}},"overrides":[]},
+      "gridPos":{"h":8,"w":12,"x":0,"y":14},
+      "id":6,
+      "options":{"orientation":"horizontal","reduceOptions":{"calcs":["last"],"values":false},"displayMode":"gradient","showUnfilled":true},
+      "targets":[{"expr":"sum by (bu, event_type) (federation_outbox_events_total)","legendFormat":"{{bu}} / {{event_type}}","refId":"A"}],
+      "title":"Event Type Distribution (all-time)",
+      "type":"bargauge"
+    },
+    {
+      "datasource":"Prometheus",
+      "description": "Relay drain rate per BU in events/s. A flatline while pending is growing = relay stalled.",
+      "fieldConfig":{"defaults":{"unit":"ops","color":{"mode":"palette-classic"}},"overrides":[]},
+      "gridPos":{"h":8,"w":12,"x":12,"y":14},
+      "id":7,
+      "options":{"legend":{"displayMode":"table","placement":"bottom","calcs":["last","max"]}},
+      "targets":[{"expr":"rate(federation_outbox_processed[2m])","legendFormat":"{{bu}} drain rate","refId":"A"}],
+      "title":"Relay Drain Rate per BU (events/s)",
+      "type":"timeseries"
+    },
+    {
+      "datasource":"Prometheus",
+      "description": "Pending events broken down by event type. Shows which category is stuck.",
+      "fieldConfig":{"defaults":{"unit":"short","color":{"mode":"palette-classic"},"custom":{"fillOpacity":70}},"overrides":[]},
+      "gridPos":{"h":8,"w":12,"x":0,"y":22},
+      "id":8,
+      "options":{"orientation":"horizontal","reduceOptions":{"calcs":["last"],"values":false},"displayMode":"gradient","showUnfilled":true},
+      "targets":[{"expr":"sum by (bu, event_type) (federation_outbox_events_pending)","legendFormat":"{{bu}} / {{event_type}}","refId":"A"}],
+      "title":"Pending Events by Type (current)",
+      "type":"bargauge"
+    },
+    {
+      "datasource":"Prometheus",
+      "description": "24h event throughput trend. Dips = fewer admin actions or pipeline idle. Spikes = bulk import or large publish.",
+      "fieldConfig":{"defaults":{"unit":"short","color":{"mode":"palette-classic"}},"overrides":[]},
+      "gridPos":{"h":8,"w":12,"x":12,"y":22},
+      "id":9,
+      "options":{"legend":{"displayMode":"table","placement":"bottom","calcs":["last","max"]}},
+      "targets":[
+        {"expr":"sum by (bu) (federation_outbox_events_last_1h)","legendFormat":"{{bu}} events/h","refId":"A"}
+      ],
+      "title":"Hourly Event Throughput per BU (last 24h)",
+      "type":"timeseries"
+    }
+  ],
+  "schemaVersion":30,
+  "tags":["federation","outbox"],
+  "templating":{"list":[]},
+  "time":{"from":"now-15m","to":"now"},
+  "refresh":"5s",
+  "title":"Federation Outbox Overview",
+  "version":2
+}

@@ -1,0 +1,111 @@
+{
+  "annotations": { "list": [] },
+  "editable": true,
+  "id": null,
+  "links": [],
+  "panels": [
+    {
+      "datasource": "Prometheus",
+      "fieldConfig": {
+        "defaults": {
+          "color": { "mode": "thresholds" },
+          "thresholds": { "steps": [{ "color": "red", "value": null }, { "color": "green", "value": 1 }] },
+          "mappings": [{ "type": "value", "options": { "0": { "text": "DOWN" }, "1": { "text": "UP" } } }]
+        },
+        "overrides": []
+      },
+      "gridPos": { "h": 6, "w": 24, "x": 0, "y": 0 },
+      "id": 1,
+      "options": { "reduceOptions": { "calcs": ["last"], "values": false }, "orientation": "horizontal", "colorMode": "background" },
+      "targets": [
+        { "expr": "probe_success{job=\"blackbox-probes\"}", "legendFormat": "{{instance}}", "refId": "A" }
+      ],
+      "title": "Business Endpoint Availability",
+      "type": "stat"
+    },
+    {
+      "datasource": "Prometheus",
+      "fieldConfig": { "defaults": { "unit": "short", "color": { "mode": "palette-classic" } }, "overrides": [] },
+      "gridPos": { "h": 8, "w": 8, "x": 0, "y": 6 },
+      "id": 2,
+      "options": { "legend": { "displayMode": "table", "placement": "bottom", "calcs": ["last"] } },
+      "targets": [
+        { "expr": "federation_outbox_pending", "legendFormat": "{{bu}}", "refId": "A" }
+      ],
+      "title": "Outbox Backlog by BU",
+      "type": "timeseries"
+    },
+    {
+      "datasource": "Prometheus",
+      "fieldConfig": {
+        "defaults": {
+          "unit": "short",
+          "color": { "mode": "thresholds" },
+          "thresholds": { "steps": [{ "color": "green", "value": null }, { "color": "orange", "value": 1 }, { "color": "red", "value": 5 }] }
+        },
+        "overrides": []
+      },
+      "gridPos": { "h": 8, "w": 8, "x": 8, "y": 6 },
+      "id": 3,
+      "options": { "reduceOptions": { "calcs": ["last"], "values": false }, "orientation": "auto", "colorMode": "value" },
+      "targets": [
+        { "expr": "sum(federation_outbox_deadletter)", "refId": "A" }
+      ],
+      "title": "Dead-letter Messages",
+      "type": "stat"
+    },
+    {
+      "datasource": "Prometheus",
+      "fieldConfig": {
+        "defaults": {
+          "unit": "s",
+          "color": { "mode": "thresholds" },
+          "thresholds": { "steps": [{ "color": "green", "value": null }, { "color": "orange", "value": 60 }, { "color": "red", "value": 300 }] }
+        },
+        "overrides": []
+      },
+      "gridPos": { "h": 8, "w": 8, "x": 16, "y": 6 },
+      "id": 4,
+      "options": { "legend": { "displayMode": "table", "placement": "bottom", "calcs": ["last"] } },
+      "targets": [
+        { "expr": "federation_outbox_oldest_pending_age_seconds", "legendFormat": "{{bu}}", "refId": "A" }
+      ],
+      "title": "Oldest Pending Age",
+      "type": "timeseries"
+    },
+    {
+      "datasource": "Prometheus",
+      "fieldConfig": { "defaults": { "unit": "short", "color": { "mode": "palette-classic" } }, "overrides": [] },
+      "gridPos": { "h": 8, "w": 12, "x": 0, "y": 14 },
+      "id": 5,
+      "options": { "legend": { "displayMode": "table", "placement": "bottom", "calcs": ["last"] } },
+      "targets": [
+        { "expr": "sum by (bu) (federation_outbox_events_last_24h{event_type=\"product.deleted\"})", "legendFormat": "{{bu}}", "refId": "A" }
+      ],
+      "title": "Delete Events Delivered (Last 24h)",
+      "type": "timeseries"
+    },
+    {
+      "datasource": "Prometheus",
+      "fieldConfig": { "defaults": { "unit": "short", "color": { "mode": "palette-classic" } }, "overrides": [] },
+      "gridPos": { "h": 8, "w": 12, "x": 12, "y": 14 },
+      "id": 6,
+      "options": { "legend": { "displayMode": "table", "placement": "bottom", "calcs": ["last"] } },
+      "targets": [
+        { "expr": "sum by (bu) (federation_outbox_events_last_24h{event_type=\"product.updated\"})", "legendFormat": "{{bu}}", "refId": "A" },
+        { "expr": "sum by (bu) (federation_outbox_events_last_24h{event_type=\"product.published\"})", "legendFormat": "{{bu}}", "refId": "B" }
+      ],
+      "title": "Create/Update Events Delivered (Last 24h)",
+      "type": "timeseries"
+    }
+  ],
+  "refresh": "10s",
+  "schemaVersion": 30,
+  "tags": ["federation", "reliability", "sla"],
+  "templating": { "list": [] },
+  "time": { "from": "now-24h", "to": "now" },
+  "timezone": "browser",
+  "title": "Federation Resilience and SLA",
+  "version": 1
+}
+
