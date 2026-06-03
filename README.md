@@ -24,62 +24,6 @@ A **two-BU federated commerce system** built on nopCommerce — two fully isolat
 
 ## Architecture Overview
 
-```
-┌─────────────────────────────────────────────────────────────────────────────────┐
-│                          federation-net (Docker network)                        │
-│                                                                                 │
-│  ┌────────────────────────────┐    ┌────────────────────────────┐               │
-│  │  BU-A  :5001               │    │  BU-B  :5002               │               │
-│  │  HomeStyle Living          │    │  WorkForge Industrial       │               │
-│  │  ─────────────────         │    │  ─────────────────          │               │
-│  │  nopCommerce Web           │    │  nopCommerce Web            │               │
-│  │  + Federation.Outbox       │    │  + Federation.Outbox        │               │
-│  │  + ExternalAuth.Keycloak   │    │  + ExternalAuth.Keycloak    │               │
-│  │            │               │    │            │                │               │
-│  │  PostgreSQL :5433          │    │  PostgreSQL :5434           │               │
-│  │  (OutboxMessage table)     │    │  (OutboxMessage table)      │               │
-│  └────────────┬───────────────┘    └────────────┬───────────────┘               │
-│               │   poll every 5 s (SKIP LOCKED)  │                               │
-│               └────────────────┬────────────────┘                               │
-│                                ▼                                                 │
-│                  ┌─────────────────────────┐                                    │
-│                  │  Kafka Relay            │  at-least-once, idempotent         │
-│                  │  (one RelayWorker/BU)   │  X-Correlation-Id tracing          │
-│                  └─────────────┬───────────┘                                    │
-│                                ▼                                                 │
-│                  ┌─────────────────────────┐                                    │
-│                  │  Kafka :9092 (KRaft)    │  federation.products               │
-│                  │                         │  orders.placed                     │
-│                  └─────────────┬───────────┘  customers.created                 │
-│                                ▼                                                 │
-│                  ┌─────────────────────────┐                                    │
-│                  │  Meilisearch Indexer    │  batch ≤50 msgs / 500 ms           │
-│                  │  published  → upsert   │  id = {storeCode}-{productId}      │
-│                  │  deleted    → delete   │                                     │
-│                  └─────────────┬───────────┘                                    │
-│                                ▼                                                 │
-│                  ┌─────────────────────────┐   ┌──────────────────────────────┐│
-│                  │  Meilisearch :7700      │──►│  Discovery API  :5010        ││
-│                  │  products index         │   │  GET /api/search             ││
-│                  └─────────────────────────┘   │  GET /api/facets             ││
-│                                                 └──────────────┬───────────────┘│
-│                                                                ▼                │
-│                                                 ┌──────────────────────────────┐│
-│                                                 │  Discovery Web  :5011        ││
-│                                                 │  Cross-BU search UI          ││
-│                                                 └──────────────────────────────┘│
-│                                                                                 │
-│  ┌─────────────────────────────────────────────────────────────────────────┐   │
-│  │  Keycloak :8080   realm: nop-federation                                 │   │
-│  │  bu-a-client ←→ BU-A          bu-b-client ←→ BU-B                      │   │
-│  └─────────────────────────────────────────────────────────────────────────┘   │
-│                                                                                 │
-│  ┌─────────────────────────────────────────────────────────────────────────┐   │
-│  │  Observability  Prometheus :9090  ·  Grafana :3000  ·  14 dashboards    │   │
-│  └─────────────────────────────────────────────────────────────────────────┘   │
-└─────────────────────────────────────────────────────────────────────────────────┘
-```
-
 **Key properties:**
 - Each BU has its own PostgreSQL + nopCommerce container — **complete failure isolation**
 - Events flow via a **transactional outbox** — no dual-write anomaly, at-least-once delivery
@@ -87,9 +31,72 @@ A **two-BU federated commerce system** built on nopCommerce — two fully isolat
 - Meilisearch holds a **unified cross-BU product index** exposed by the Discovery API
 - Keycloak provides **SSO** — one account works on both stores
 
-> 📊 **Full Mermaid diagrams** (C4 context, state machine, sequence flows, observability stack) are in [`docs/diagrams.md`](docs/diagrams.md).  
-> 📖 **Plain-language step-by-step walkthrough** (one action → outbox → relay → Kafka → indexer → search) is in [`docs/how_it_works.md`](docs/how_it_works.md).
+> 📖 **Technical Overview & Architecture** In depth module explanations, design, communication and architecture [`TECHNICAL_OVERVIEW.md`](docs/implementation/docs/TECHNICAL_OVERVIEW.md).
 
+> 📖 **Plain-language step-by-step walkthrough** (one action → outbox → relay → Kafka → indexer → search) is in [`how_it_works.md`](/docs/implementation/docs/how_it_works.md).
+
+> 📊 **Full Mermaid diagrams** (C4 context, state machine, sequence flows, observability stack) are in [`diagrams.md`](/docs/implementation/docs/diagrams.md).
+
+> 📖 **Demo Scenario** Demo guide and explanations [`demo_playbook.md`](docs/implementation/docs/demo_playbook.md).
+
+> 📖 **Slides** Slides for presentation, summary of architecture [`slides.html`](/docs/implementation/docs/slides.html).
+
+
+```
+┌─────────────────────────────────────────────────────────────────────────────────┐
+│                          federation-net (Docker network)                        │
+│                                                                                 │
+│  ┌────────────────────────────┐    ┌────────────────────────────┐               │
+│  │  BU-A  :5001               │    │  BU-B  :5002               │               │
+│  │  HomeStyle Living          │    │  WorkForge Industrial      │               │
+│  │  ─────────────────         │    │  ─────────────────         │               │
+│  │  nopCommerce Web           │    │  nopCommerce Web           │               │
+│  │  + Federation.Outbox       │    │  + Federation.Outbox       │               │
+│  │  + ExternalAuth.Keycloak   │    │  + ExternalAuth.Keycloak   │               │
+│  │            │               │    │            │               │               │
+│  │  PostgreSQL :5433          │    │  PostgreSQL :5434          │               │
+│  │  (OutboxMessage table)     │    │  (OutboxMessage table)     │               │
+│  └────────────┬───────────────┘    └────────────┬───────────────┘               │
+│               │   poll every 5 s (SKIP LOCKED)  │                               │
+│               └────────────────┬────────────────┘                               │
+│                                ▼                                                │
+│                  ┌─────────────────────────┐                                    │
+│                  │  Kafka Relay            │  at-least-once, idempotent         │
+│                  │  (one RelayWorker/BU)   │  X-Correlation-Id tracing          │
+│                  └─────────────┬───────────┘                                    │
+│                                ▼                                                │
+│                  ┌─────────────────────────┐                                    │
+│                  │  Kafka :9092 (KRaft)    │  federation.products               │
+│                  │                         │  orders.placed                     │
+│                  └─────────────┬───────────┘  customers.created                 │
+│                                ▼                                                │
+│                  ┌─────────────────────────┐                                    │
+│                  │  Meilisearch Indexer    │  batch ≤50 msgs / 500 ms           │
+│                  │  published  → upsert    │  id = {storeCode}-{productId}      │
+│                  │  deleted    → delete    │                                    │
+│                  └─────────────┬───────────┘                                    │
+│                                ▼                                                │
+│                  ┌─────────────────────────┐   ┌──────────────────────────────┐ │
+│                  │  Meilisearch :7700      │──►│  Discovery API  :5010        │ │
+│                  │  products index         │   │  GET /api/search             │ │
+│                  └─────────────────────────┘   │  GET /api/facets             │ │
+│                                                └───────────────┬──────────────┘ │
+│                                                                ▼                │
+│                                                 ┌──────────────────────────────┐│
+│                                                 │  Discovery Web  :5011        ││
+│                                                 │  Cross-BU search UI          ││
+│                                                 └──────────────────────────────┘│
+│                                                                                 │
+│  ┌─────────────────────────────────────────────────────────────────────────┐    │
+│  │  Keycloak :8080   realm: nop-federation                                 │    │
+│  │  bu-a-client ←→ BU-A          bu-b-client ←→ BU-B                       │    │
+│  └─────────────────────────────────────────────────────────────────────────┘    │
+│                                                                                 │
+│  ┌─────────────────────────────────────────────────────────────────────────┐    │
+│  │  Observability  Prometheus :9090  ·  Grafana :3000  ·  14 dashboards    │    │
+│  └─────────────────────────────────────────────────────────────────────────┘    │
+└─────────────────────────────────────────────────────────────────────────────────┘
+```
 ---
 
 ## Technology Stack
