@@ -2,7 +2,7 @@
 
 > One document, plain language. Trace any action from admin click to search result.  
 > For deep-dive diagrams see [`docs/diagrams.md`](diagrams.md).  
-> For commands and ports see [`README.md`](../README.md).
+> For commands and ports see [`README.md`](../../../README.md).
 
 ---
 

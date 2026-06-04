@@ -172,25 +172,4 @@ All dashboards use **real metrics** and refresh every 5 s.
 
 ---
 
-## Safety Notes
-
-- Only run these steps in the development environment.
-- Do not pause production databases.
-- BU web restarts are a demo shortcut; production replay should remain event-driven.
-
----
-
-## Files Referenced
-
-| File | Purpose |
-|---|---|
-| `docs/demo_playbook.md` | This file |
-| `docs/diagrams.md` | 9 Mermaid architecture diagrams |
-| `scripts/demo/pause_bua.sh` | Pause BU-A postgres container |
-| `scripts/demo/resume_bua.sh` | Resume BU-A postgres container |
-| `scripts/demo/load_test.sh` | Concurrent load against Discovery API |
-| `monitoring/grafana/dashboards/` | 8 auto-provisioned Grafana dashboards |
-
----
-
 *Last updated: 2026-06-03*
