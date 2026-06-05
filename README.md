@@ -37,6 +37,8 @@ A **two-BU federated commerce system** built on nopCommerce — two fully isolat
 
 > 📊 **Full Mermaid diagrams** (C4 context, state machine, sequence flows, observability stack) are in [`diagrams.md`](/docs/implementation/docs/diagrams.md).
 
+> 📖 **Demo Evidences** Images and outputs of running platform [`evidence_pack`](/docs/implementation/evidence_pack).
+
 > 📖 **Demo Scenario** Demo guide and explanations [`demo_playbook.md`](docs/implementation/docs/demo_playbook.md).
 
 > 📖 **Slides** Slides for presentation, summary of architecture [`slides.html`](/docs/implementation/docs/slides.html).
