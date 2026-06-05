@@ -1,0 +1,3 @@
+- When DB is down the nopcemmerce application is also down, timeouting on requests, there is no handling mechanism for DB failure. In developed architecture failure in one store's DB doesn't affect other store's and shared services, isolationing failure in one store.
+- Shared search timeouts when search API is down, better approach would be circuit breaking search functionality in store UIs.
+- Some Grafana metrics are wrong because of the calculation method, they're mostly AI generated and due to time limitation aren't fully validated. Exported metrics on Prometheus are correct and Grafana calculation metrics should be fixed in upcoming development.

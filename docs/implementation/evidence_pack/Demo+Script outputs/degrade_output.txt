@@ -1,0 +1,306 @@
+ilker@Ilkers-MacBook-Pro src % ./platform.sh demo-degrade
+
+════════════════════════════════════════════════════════════════════
+  🎭  Demo: BU-A degradation scenario (30s, 50 workers)
+════════════════════════════════════════════════════════════════════
+Pausing BU-A Postgres container: nopcommerce_bua_postgres
+nopcommerce_bua_postgres
+Running load test (concurrency=50 duration=30s) while BU-A is degraded
+Starting load test: concurrency=50 duration=30s discovery=http://localhost:5010/api/search?q=*
+200 0.306457 discovery
+200 0.310965 discovery
+200 0.240567 discovery
+200 0.216335 discovery
+200 0.265167 discovery
+200 0.228561 discovery
+200 0.229494 discovery
+200 0.230274 discovery
+200 0.232398 discovery
+200 0.226144 discovery
+200 0.234942 discovery
+200 0.276925 discovery
+200 0.295637 discovery
+200 0.313366 discovery
+200 0.142596 discovery
+200 0.145617 discovery
+200 0.086224 discovery
+200 0.314995 discovery
+200 0.224838 discovery
+200 0.159692 discovery
+200 0.088598 discovery
+200 0.087203 discovery
+200 0.185079 discovery
+200 0.249355 discovery
+200 0.093951 discovery
+200 0.316488 discovery
+200 0.223770 discovery
+200 0.087768 discovery
+200 0.287036 discovery
+200 0.289943 discovery
+200 0.019442 discovery
+200 0.028320 discovery
+200 0.016751 discovery
+200 0.118142 discovery
+200 0.059337 discovery
+200 0.039537 discovery
+200 0.102600 discovery
+200 0.015375 discovery
+200 0.020960 discovery
+200 0.034682 discovery
+200 0.043477 discovery
+200 0.086378 discovery
+200 0.077026 discovery
+200 0.081758 discovery
+200 0.166812 discovery
+200 0.162072 discovery
+200 0.166246 discovery
+200 0.159698 discovery
+200 0.170316 discovery
+200 0.170486 discovery
+200 3.147183 bub
+200 3.443658 bub
+200 3.496719 bub
+200 3.120363 bub
+200 3.011271 bub
+200 3.677688 bub
+200 3.503086 bub
+200 3.616343 bub
+200 3.684932 bub
+200 0.148150 discovery
+200 0.148144 discovery
+200 0.147814 discovery
+200 0.136116 discovery
+200 0.137403 discovery
+200 0.144333 discovery
+200 0.138891 discovery
+200 0.150217 discovery
+200 3.771502 bub
+200 3.974912 bub
+200 4.065859 bub
+200 0.033067 discovery
+200 0.022178 discovery
+200 3.540326 bub
+200 3.982324 bub
+200 0.018098 discovery
+200 0.017745 discovery
+200 3.852001 bub
+200 4.188781 bub
+200 4.047397 bub
+200 4.104436 bub
+200 3.647543 bub
+200 4.221675 bub
+200 4.313604 bub
+200 4.126508 bub
+200 4.207844 bub
+200 3.898465 bub
+200 0.008255 discovery
+200 0.038539 discovery
+200 4.477194 bub
+200 0.037488 discovery
+200 0.038331 discovery
+200 3.947529 bub
+200 0.032875 discovery
+200 0.032831 discovery
+200 0.035687 discovery
+200 0.041175 discovery
+200 0.037563 discovery
+200 0.046120 discovery
+200 0.044702 discovery
+200 0.046656 discovery
+200 0.020458 discovery
+200 4.028730 bub
+200 0.019454 discovery
+200 0.011567 discovery
+200 0.851540 bub
+200 0.882854 bub
+200 0.756273 bub
+200 1.032524 bub
+200 1.209425 bub
+200 1.233573 bub
+200 0.080629 discovery
+200 0.040668 discovery
+200 0.040854 discovery
+200 0.083858 discovery
+200 0.007905 discovery
+200 0.011255 discovery
+200 0.841839 bub
+200 0.854239 bub
+200 1.181098 bub
+200 0.996271 bub
+200 1.012382 bub
+200 1.000018 bub
+200 0.038225 discovery
+200 0.046772 discovery
+200 0.916228 bub
+200 0.942495 bub
+200 1.065050 bub
+200 1.271720 bub
+200 0.807499 bub
+200 0.043686 discovery
+200 0.024344 discovery
+200 0.017260 discovery
+200 0.021781 discovery
+200 0.015432 discovery
+200 0.020194 discovery
+200 0.012056 discovery
+200 0.032420 discovery
+200 0.013988 discovery
+200 0.645832 bub
+200 0.714574 bub
+200 0.668588 bub
+200 0.741512 bub
+200 0.727922 bub
+200 0.476582 bub
+200 0.010261 discovery
+200 0.350518 bub
+200 0.371629 bub
+200 0.006922 discovery
+200 0.004894 discovery
+200 0.005811 discovery
+200 0.009191 discovery
+200 0.016428 discovery
+200 0.022690 discovery
+200 0.008217 discovery
+200 0.798569 bub
+200 0.775392 bub
+200 0.750107 bub
+200 0.671024 bub
+200 0.755243 bub
+200 0.006823 discovery
+200 0.003540 discovery
+200 0.004314 discovery
+200 0.018887 discovery
+200 0.015885 discovery
+200 0.128390 bub
+200 0.125801 bub
+200 0.117643 bub
+200 0.119598 bub
+200 0.009063 discovery
+200 0.014470 discovery
+200 0.004530 discovery
+200 0.010889 discovery
+200 0.138618 bub
+200 0.071267 bub
+200 0.086974 bub
+200 0.005182 discovery
+200 0.010968 discovery
+200 0.018246 discovery
+200 0.210730 bub
+200 0.210433 bub
+200 0.006131 discovery
+200 0.006930 discovery
+200 0.244805 bub
+200 0.041729 discovery
+500 45.365683 bua
+500 45.751695 bua
+500 45.751781 bua
+500 45.757764 bua
+500 45.632363 bua
+500 45.683324 bua
+500 45.810440 bua
+500 45.651749 bua
+500 45.770310 bua
+500 45.879542 bua
+500 45.657075 bua
+500 45.198140 bua
+500 45.396433 bua
+500 45.659858 bua
+500 45.498679 bua
+500 45.874800 bua
+500 45.332249 bua
+500 45.824724 bua
+500 45.262861 bua
+500 45.469864 bua
+500 41.910690 bua
+500 41.906616 bua
+500 45.351793 bua
+500 41.923504 bua
+500 56.464277 bua
+500 56.991428 bua
+500 55.331812 bua
+500 55.231494 bua
+500 57.024834 bua
+500 56.469368 bua
+500 55.186051 bua
+500 56.505672 bua
+500 52.903437 bua
+500 55.296037 bua
+500 61.101482 bua
+500 55.310370 bua
+500 54.673470 bua
+500 57.058475 bua
+500 55.222878 bua
+500 53.585287 bua
+500 55.706192 bua
+500 54.743884 bua
+500 56.517307 bua
+500 54.835630 bua
+500 55.224883 bua
+500 55.431191 bua
+500 53.313189 bua
+500 53.917428 bua
+500 52.552006 bua
+500 61.088039 bua
+Load test completed
+Unpausing BU-A Postgres container: nopcommerce_bua_postgres
+nopcommerce_bua_postgres
+BU-A is back. The Outbox hosted service will re-seed any missing events on next app boot.
+To trigger immediately, restart the BU-A web container:
+  docker compose -f docker-compose.bua.yml restart nopcommerce-bua
+Tailing indexer logs to observe reconciliation (Ctrl+C to stop)
+info: Federation.MeilisearchIndexer.Workers.IndexerWorker[0]
+      [Indexer] Starting. Kafka=kafka:9092
+info: Microsoft.Hosting.Lifetime[0]
+      Application started. Press Ctrl+C to shut down.
+info: Microsoft.Hosting.Lifetime[0]
+      Hosting environment: Production
+info: Microsoft.Hosting.Lifetime[0]
+      Content root path: /app
+info: Federation.MeilisearchIndexer.Workers.IndexerWorker[0]
+      [Indexer] Meilisearch index 'products' ready.
+info: Federation.MeilisearchIndexer.Workers.IndexerWorker[0]
+      [Indexer] Topic 'federation.products' already exists — ready.
+info: Federation.MeilisearchIndexer.Workers.IndexerWorker[0]
+      [Indexer] Upserting 2 document(s) into Meilisearch.
+info: Federation.MeilisearchIndexer.Workers.IndexerWorker[0]
+      [Indexer] Bulk upserted 2 documents
+info: Federation.MeilisearchIndexer.Workers.IndexerWorker[0]
+      [Indexer] Upserting 2 document(s) into Meilisearch.
+info: Federation.MeilisearchIndexer.Workers.IndexerWorker[0]
+      [Indexer] Bulk upserted 2 documents
+info: Federation.MeilisearchIndexer.Workers.IndexerWorker[0]
+      [Indexer] Upserting 2 document(s) into Meilisearch.
+info: Federation.MeilisearchIndexer.Workers.IndexerWorker[0]
+      [Indexer] Bulk upserted 2 documents
+info: Federation.MeilisearchIndexer.Workers.IndexerWorker[0]
+      [Indexer] Upserting 2 document(s) into Meilisearch.
+info: Federation.MeilisearchIndexer.Workers.IndexerWorker[0]
+      [Indexer] Bulk upserted 2 documents
+info: Microsoft.Hosting.Lifetime[0]
+      Application is shutting down...
+info: Federation.MeilisearchIndexer.Workers.IndexerWorker[0]
+      [Indexer] Starting. Kafka=kafka:9092
+info: Microsoft.Hosting.Lifetime[0]
+      Application started. Press Ctrl+C to shut down.
+info: Microsoft.Hosting.Lifetime[0]
+      Hosting environment: Production
+info: Microsoft.Hosting.Lifetime[0]
+      Content root path: /app
+info: Federation.MeilisearchIndexer.Workers.IndexerWorker[0]
+      [Indexer] Meilisearch index 'products' ready.
+info: Federation.MeilisearchIndexer.Workers.IndexerWorker[0]
+      [Indexer] Topic 'federation.products' already exists — ready.
+info: Microsoft.Hosting.Lifetime[0]
+      Application is shutting down...
+info: Federation.MeilisearchIndexer.Workers.IndexerWorker[0]
+      [Indexer] Starting. Kafka=kafka:9092
+info: Microsoft.Hosting.Lifetime[0]
+      Application started. Press Ctrl+C to shut down.
+info: Microsoft.Hosting.Lifetime[0]
+      Hosting environment: Production
+info: Microsoft.Hosting.Lifetime[0]
+      Content root path: /app
+info: Federation.MeilisearchIndexer.Workers.IndexerWorker[0]
+      [Indexer] Meilisearch index 'products' ready.
+info: Federation.MeilisearchIndexer.Workers.IndexerWorker[0]
+      [Indexer] Topic 'federation.products' already exists — ready.

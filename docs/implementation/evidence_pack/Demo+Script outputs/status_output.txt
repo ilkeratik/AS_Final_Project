@@ -1,0 +1,45 @@
+ilker@Ilkers-MacBook-Pro src % ./platform.sh status
+
+════════════════════════════════════════════════════════════════════
+  📊  Platform Status
+════════════════════════════════════════════════════════════════════
+
+── BU-A ─────────────────────────────────────────────────────────────────
+NAME                       IMAGE                    COMMAND                  SERVICE           CREATED      STATUS                    PORTS
+nopcommerce_bua_postgres   postgres:15-alpine       "docker-entrypoint.s…"   postgres-bua      2 days ago   Up 39 minutes (healthy)   0.0.0.0:5433->5432/tcp
+nopcommerce_bua_web        nop-nopcommerce:latest   "dotnet Nop.Web.dll"     nopcommerce-bua   2 days ago   Up 39 minutes (healthy)   0.0.0.0:5001->80/tcp
+  ✅  HTTP 200
+
+── BU-B ─────────────────────────────────────────────────────────────────
+NAME                       IMAGE                    COMMAND                  SERVICE           CREATED      STATUS                    PORTS
+nopcommerce_bub_postgres   postgres:15-alpine       "docker-entrypoint.s…"   postgres-bub      2 days ago   Up 39 minutes (healthy)   0.0.0.0:5434->5432/tcp
+nopcommerce_bub_web        nop-nopcommerce:latest   "dotnet Nop.Web.dll"     nopcommerce-bub   2 days ago   Up 39 minutes (healthy)   0.0.0.0:5002->80/tcp
+  ✅  HTTP 200
+
+── Federation Platform ──────────────────────────────────────────────────
+NAME                       IMAGE                              COMMAND                  SERVICE         CREATED      STATUS                    PORTS
+federation_discovery_api   federation-discovery-api           "dotnet Federation.D…"   discovery-api   2 days ago   Up 38 minutes (healthy)   0.0.0.0:5010->8080/tcp
+federation_discovery_web   federation-discovery-web           "dotnet Federation.D…"   discovery-web   2 days ago   Up 38 minutes (healthy)   0.0.0.0:5011->8080/tcp
+federation_kafka           apache/kafka:3.7.0                 "/__cacert_entrypoin…"   kafka           2 days ago   Up 38 minutes (healthy)   0.0.0.0:9092->9092/tcp
+federation_kafka_relay     federation-kafka-relay             "dotnet Federation.K…"   kafka-relay     2 days ago   Up 38 minutes             
+federation_keycloak        quay.io/keycloak/keycloak:25.0.1   "/opt/keycloak/bin/k…"   keycloak        2 days ago   Up 38 minutes (healthy)   8443/tcp, 0.0.0.0:8080->8080/tcp, 9000/tcp
+federation_meili_indexer   federation-meili-indexer           "dotnet Federation.M…"   meili-indexer   2 days ago   Up 38 minutes             
+federation_meilisearch     getmeili/meilisearch:v1.8          "tini -- /bin/sh -c …"   meilisearch     2 days ago   Up 38 minutes (healthy)   0.0.0.0:7700->7700/tcp
+  ✅  Keycloak OIDC: HTTP 200
+  ✅  Meilisearch: HTTP 200
+  ✅  Discovery API: HTTP 200
+  ✅  Discovery Web: HTTP 200
+
+── SSO spot-checks ──────────────────────────────────────────────────────
+  ✅  BU-A SSO: HTTP 302
+  ✅  BU-B SSO: HTTP 302
+
+── Monitoring ───────────────────────────────────────────────────────────
+NAME                         IMAGE                                                   COMMAND                  SERVICE                 CREATED      STATUS          PORTS
+federation_blackbox_1        prom/blackbox-exporter:latest                           "/bin/blackbox_expor…"   blackbox                2 days ago   Up 37 minutes   0.0.0.0:9115->9115/tcp
+federation_grafana_1         grafana/grafana:latest                                  "/run.sh"                grafana                 2 days ago   Up 37 minutes   0.0.0.0:3000->3000/tcp
+federation_pg_exporter_bua   quay.io/prometheuscommunity/postgres-exporter:v0.15.0   "/bin/postgres_expor…"   postgres-exporter-bua   2 days ago   Up 37 minutes   0.0.0.0:9187->9187/tcp
+federation_pg_exporter_bub   quay.io/prometheuscommunity/postgres-exporter:v0.15.0   "/bin/postgres_expor…"   postgres-exporter-bub   2 days ago   Up 37 minutes   0.0.0.0:9188->9187/tcp
+federation_prometheus_1      prom/prometheus:latest                                  "/bin/prometheus --c…"   prometheus              2 days ago   Up 37 minutes   0.0.0.0:9090->9090/tcp
+  ✅  Prometheus: HTTP 302
+  ✅  Grafana: HTTP 200

@@ -3,7 +3,7 @@
 A **two-BU federated commerce system** built on nopCommerce — two fully isolated stores sharing a common event backbone, unified search index, and SSO identity provider.
 
 ## Repository summary
-- **/docs:** Design and implementation documents, slides and diagrams
+- **/docs:** Design and implementation documents, demo evidences, slides and diagrams
 - **/source_code:** Nopcommerce and developed features including containers and scripts
 
 ## Table of Contents
@@ -40,6 +40,8 @@ A **two-BU federated commerce system** built on nopCommerce — two fully isolat
 > 📖 **Demo Scenario** Demo guide and explanations [`demo_playbook.md`](docs/implementation/docs/demo_playbook.md).
 
 > 📖 **Slides** Slides for presentation, summary of architecture [`slides.html`](/docs/implementation/docs/slides.html).
+
+> 📖 **Known Limitations** List of future work [`known_limitations.md`](docs/implementation/docs/known_limitations.md).
 
 
 ```
@@ -694,17 +696,6 @@ dotnet build Plugins/Nop.Plugin.Federation.Outbox/... -c Release                
 dotnet build FederationPlatform/Federation.KafkaRelay/... -c Release             # relay
 dotnet build FederationPlatform/Federation.MeilisearchIndexer/... -c Release     # indexer
 ```
-
-### Coding rules
-- File-scoped namespaces; follow existing nopCommerce patterns
-- `IRepository<T>`, `IEventPublisher`, `IConsumer<T>` where appropriate
-- Event consumers must be **idempotent** (dedup via `MessageId`)
-- Use `ILogger` / `ILogger<T>` — never `Console.WriteLine`
-- No hardcoded secrets or infrastructure addresses
-- Async-first, nullable-safe C# 13
-
-See [`RULES.md`](RULES.md) for the full coding standards and [`CONTRIBUTING.md`](CONTRIBUTING.md) for the PR workflow.
-
 ---
 
 ## File Structure
@@ -783,5 +774,3 @@ src/
 ```
 
 ---
-
-*Last updated: 2026-06-03*

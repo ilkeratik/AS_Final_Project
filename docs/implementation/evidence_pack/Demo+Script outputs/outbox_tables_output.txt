@@ -1,0 +1,46 @@
+ilker@Ilkers-MacBook-Pro src % ./platform.sh outbox
+
+════════════════════════════════════════════════════════════════════
+  📬  Outbox snapshot
+════════════════════════════════════════════════════════════════════
+
+── BU-A Outbox ─────────────────────────────────────────────────────────────
+ total | pending | processed | deadletter |       newest_row_utc       
+-------+---------+-----------+------------+----------------------------
+    35 |       0 |        35 |          0 | 2026-06-02 22:13:15.269572
+(1 row)
+
+ Id |        CreatedOnUtc        |     EventType     | EntityId |        Topic        |       ProcessedOnUtc       | Attempts | LastError 
+----+----------------------------+-------------------+----------+---------------------+----------------------------+----------+-----------
+ 68 | 2026-06-02 22:13:15.269572 | customer.updated  |       57 | customers.created   | 2026-06-02 22:13:20.247549 |        0 | 
+ 67 | 2026-06-02 22:13:15.24768  | customer.updated  |       57 | customers.created   | 2026-06-02 22:13:20.247549 |        0 | 
+ 66 | 2026-06-02 21:46:47.569256 | product.published |       33 | federation.products | 2026-06-02 21:46:47.670518 |        0 | 
+ 65 | 2026-06-02 21:46:47.545768 | product.published |       32 | federation.products | 2026-06-02 21:46:47.670518 |        0 | 
+ 64 | 2026-06-02 21:46:47.520164 | product.published |       31 | federation.products | 2026-06-02 21:46:47.670518 |        0 | 
+ 63 | 2026-06-02 21:46:47.497543 | product.published |       30 | federation.products | 2026-06-02 21:46:47.670518 |        0 | 
+ 62 | 2026-06-02 21:46:47.475993 | product.published |       29 | federation.products | 2026-06-02 21:46:47.670518 |        0 | 
+ 61 | 2026-06-02 21:46:47.453837 | product.published |       28 | federation.products | 2026-06-02 21:46:47.670518 |        0 | 
+ 60 | 2026-06-02 21:46:47.430086 | product.published |       27 | federation.products | 2026-06-02 21:46:47.670518 |        0 | 
+ 59 | 2026-06-02 21:46:47.416341 | product.published |       26 | federation.products | 2026-06-02 21:46:47.670518 |        0 | 
+(10 rows)
+
+
+── BU-B Outbox ─────────────────────────────────────────────────────────────
+ total | pending | processed | deadletter |       newest_row_utc       
+-------+---------+-----------+------------+----------------------------
+    66 |       0 |        66 |          0 | 2026-06-03 10:01:10.722214
+(1 row)
+
+ Id  |        CreatedOnUtc        |     EventType     | EntityId |        Topic        |       ProcessedOnUtc       | Attempts | LastError 
+-----+----------------------------+-------------------+----------+---------------------+----------------------------+----------+-----------
+ 105 | 2026-06-03 10:01:10.722214 | product.updated   |       39 | federation.products | 2026-06-03 10:01:15.372902 |        0 | 
+ 104 | 2026-06-03 10:01:10.669925 | product.published |       39 | federation.products | 2026-06-03 10:01:15.372902 |        0 | 
+ 103 | 2026-06-03 09:51:00.20569  | product.updated   |       38 | federation.products | 2026-06-03 09:51:00.693303 |        0 | 
+ 102 | 2026-06-03 09:51:00.163154 | product.published |       38 | federation.products | 2026-06-03 09:51:00.693303 |        0 | 
+ 101 | 2026-06-03 09:48:39.024765 | product.updated   |       37 | federation.products | 2026-06-03 09:49:26.814309 |        0 | 
+ 100 | 2026-06-03 09:48:38.995237 | product.updated   |       37 | federation.products | 2026-06-03 09:49:26.814309 |        0 | 
+  99 | 2026-06-03 09:47:29.816499 | product.updated   |       37 | federation.products | 2026-06-03 09:47:34.430659 |        0 | 
+  98 | 2026-06-03 09:47:29.729703 | product.updated   |       37 | federation.products | 2026-06-03 09:47:34.430659 |        0 | 
+  97 | 2026-06-03 01:34:44.170047 | product.updated   |       37 | federation.products | 2026-06-03 01:36:08.582643 |        0 | 
+  96 | 2026-06-03 01:34:44.131589 | product.updated   |       37 | federation.products | 2026-06-03 01:36:08.582643 |        0 | 
+(10 rows)
